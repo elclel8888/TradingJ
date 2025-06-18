@@ -99,8 +99,9 @@
                 <section class="bg-white p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4 text-slate-800">Data Management</h2>
                     <div class="space-y-4">
-                        <button id="btn-import" class="btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-md">Import Data</button>
+                        <button id="btn-import" class="btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-md">Import Local Data</button>
                         <input type="file" id="file-input" class="hidden" accept=".json">
+                        <button id="btn-load-online" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">Load Online Data</button>
                         <button id="btn-export" class="btn w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 px-4 rounded-md">Export Data</button>
                     </div>
                 </section>
@@ -338,13 +339,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 initialCapital: 10, 
                 currentCash: 10,
                 highWaterMark: 10,
-                riskPerTradePercentage: 0.8,      // Default: 0.8% risk per trade
-                moderateDrawdownThreshold: 5,   // Default: 5%
-                highRiskDrawdownThreshold: 10,  // Default: 10%
+                riskPerTradePercentage: 0.8,
+                moderateDrawdownThreshold: 5,
+                highRiskDrawdownThreshold: 10,
                 apiKeys: [],
                 alphaVantageKey: '',
-                currentApiKeyIndex: 0, // Start with the first key
-                geminiModel: 'gemini-1.5-flash-latest' // Aligned with UI
+                currentApiKeyIndex: 0, 
+                geminiModel: 'gemini-1.5-flash-latest'
             },
             sort: { key: 'entryDate', dir: 'desc' }
         };
@@ -354,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cacheDom = () => {
             const ids = [
                 'total-assets', 'current-cash', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
-                'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 
+                'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
                 'btn-settings', 'btn-api-keys', 'btn-view-stats', 'btn-gen-summary', 'btn-analyze-portfolio',
                 'btn-describe-holdings',
@@ -516,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                calc.recordNavPoint(); // Record NAV once after all prices are fetched
+                calc.recordNavPoint(); 
                 ui.render();
                 
                 if (errorMessages.size > 0) {
@@ -533,74 +534,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const calc = {
             getTradeMetrics: (trade) => {
                 const { initialCapital, riskPerTradePercentage } = state.settings;
-                // Standard 1R value for the entire account
                 const accountRValue = initialCapital * (riskPerTradePercentage / 100);
 
                 const metrics = {
                     tradeRiskInDollars: 0,
-                    initialR: 0, // This will be the R-multiple of the trade's risk relative to account R
+                    initialR: 0, 
                     realizedPL: 0, 
-                    realizedR: 0, // P/L expressed as a multiple of the standard Account R
+                    realizedR: 0, 
                     unrealizedPL: 0, 
-                    unrealizedR: 0 // P/L expressed as a multiple of the standard Account R
+                    unrealizedR: 0
                 };
 
                 if (!trade.entryPrice || !trade.initialStop || !trade.position) {
                     return metrics;
                 }
 
-                // The actual dollar risk taken on this specific trade
                 metrics.tradeRiskInDollars = (trade.entryPrice - trade.initialStop) * trade.position;
-                
-                // Calculate the trade's risk as a multiple of the standard Account R
                 if (accountRValue > 0) {
                     metrics.initialR = metrics.tradeRiskInDollars / accountRValue;
                 }
                 
                 if (trade.status === 'Open' && trade.currentPrice) {
                     metrics.unrealizedPL = (trade.currentPrice - trade.entryPrice) * trade.position;
-                     // P/L as a multiple of the standard Account R value
                     if (accountRValue > 0) metrics.unrealizedR = metrics.unrealizedPL / accountRValue;
                 } else if (trade.status === 'Closed' && trade.exitPrice) {
                     metrics.realizedPL = (trade.exitPrice - trade.entryPrice) * trade.position;
-                    // P/L as a multiple of the standard Account R value
                     if (accountRValue > 0) metrics.realizedR = metrics.realizedPL / accountRValue;
                 }
                 return metrics;
             },
             getCurrentRiskR: (trade) => {
                 if (trade.status !== 'Open') return 0;
-
                 const { initialCapital, riskPerTradePercentage } = state.settings;
                 const accountRValue = initialCapital * (riskPerTradePercentage / 100);
                 if (accountRValue <= 0) return 0;
-
                 let riskInDollars = 0;
-
-                // If a valid trailing stop and current price exist, calculate risk from current price to trailing stop.
                 if (trade.trailingStop && trade.currentPrice > 0 && trade.position > 0) {
                     riskInDollars = (trade.currentPrice - trade.trailingStop) * trade.position;
                     return riskInDollars / accountRValue;
                 } else { 
-                    // Otherwise, fall back to the initial risk of the trade.
                     return calc.getTradeMetrics(trade).initialR;
                 }
             },
             getRiskMetrics: () => {
                 const openValue = state.trades.filter(t => t.status === 'Open').reduce((s, t) => s + ((t.currentPrice || t.entryPrice) * t.position), 0);
                 const nav = state.settings.currentCash + openValue;
-                
                 state.settings.highWaterMark = Math.max(state.settings.highWaterMark || nav, nav);
-
                 const drawdownDollars = state.settings.highWaterMark - nav;
                 const drawdownPercent = state.settings.highWaterMark > 0 ? (drawdownDollars / state.settings.highWaterMark) * 100 : 0;
-
-                return {
-                    nav,
-                    hwm: state.settings.highWaterMark,
-                    drawdownDollars,
-                    drawdownPercent,
-                };
+                return { nav, hwm: state.settings.highWaterMark, drawdownDollars, drawdownPercent };
             },
             getRiskZone: (totalOpenRiskR) => {
                 if (totalOpenRiskR > 6) return 'Red';
@@ -638,15 +620,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const idx = state.navHistory.findIndex(e => e.date === today);
                 if (idx > -1) {
-                    // Update the latest NAV and timestamp for the day
                     state.navHistory[idx].nav = parseFloat(nav.toFixed(2));
                     state.navHistory[idx].timestamp = timestamp;
                 } else {
-                    // Add a new entry for the day
                     state.navHistory.push({ date: today, nav: parseFloat(nav.toFixed(2)), timestamp: timestamp });
                 }
-                // Sort by date, which is sufficient as there's only one entry per date
-                state.navHistory.sort((a,b) => new Date(a.date) - new Date(b.date));
+                state.navHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+        };
+
+        const loadDataIntoState = (data) => {
+            try {
+                if (!data || !data.settings || !data.trades || !data.navHistory) {
+                    throw new Error("Invalid or incomplete data format");
+                }
+                
+                const defaultSettings = {
+                    highWaterMark: data.settings.initialCapital,
+                    riskPerTradePercentage: 1.0,
+                    moderateDrawdownThreshold: 5,
+                    highRiskDrawdownThreshold: 10,
+                };
+                state.settings = { ...defaultSettings, ...data.settings };
+                
+                state.trades = data.trades;
+                state.navHistory = data.navHistory.map(item => ({ 
+                    ...item, 
+                    timestamp: item.timestamp || new Date(item.date).toISOString() 
+                }));
+
+                ui.render();
+                util.showAlert('Data loaded successfully!');
+            } catch (err) { 
+                util.showAlert(`Failed to load data: ${err.message}`); 
+                console.error("Data Load Error:", err);
             }
         };
 
@@ -711,42 +718,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 else zoneEl.classList.add('bg-red-100', 'text-red-800');
             },
             renderTrades: () => {
-                const tradesWithMetrics = state.trades.map(trade => ({
-                    ...trade,
-                    metrics: calc.getTradeMetrics(trade)
-                }));
+                const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
 
                 const { key, dir } = state.sort;
                 tradesWithMetrics.sort((a, b) => {
-                    const metricsA = a.metrics;
-                    const metricsB = b.metrics;
+                    const metricsA = a.metrics, metricsB = b.metrics;
                     let valA, valB;
-
                     switch(key) {
-                        case 'plDollars':
-                            valA = a.status === 'Closed' ? metricsA.realizedPL : metricsA.unrealizedPL;
-                            valB = b.status === 'Closed' ? metricsB.realizedPL : metricsB.unrealizedPL;
-                            break;
-                        case 'plR':
-                            valA = a.status === 'Closed' ? metricsA.realizedR : metricsA.unrealizedR;
-                            valB = b.status === 'Closed' ? metricsB.realizedR : metricsB.unrealizedR;
-                            break;
-                        case 'initialR':
-                            valA = metricsA.initialR;
-                            valB = metricsB.initialR;
-                            break;
-                        default:
-                            valA = a[key];
-                            valB = b[key];
+                        case 'plDollars': valA = a.status === 'Closed' ? metricsA.realizedPL : metricsA.unrealizedPL; valB = b.status === 'Closed' ? metricsB.realizedPL : metricsB.unrealizedPL; break;
+                        case 'plR': valA = a.status === 'Closed' ? metricsA.realizedR : metricsA.unrealizedR; valB = b.status === 'Closed' ? metricsB.realizedR : metricsB.unrealizedR; break;
+                        case 'initialR': valA = metricsA.initialR; valB = metricsB.initialR; break;
+                        default: valA = a[key]; valB = b[key];
                     }
-                    
                     if (valA === undefined || valA === null) return 1; if (valB === undefined || valB === null) return -1;
                     const comp = key.includes('Date') ? new Date(valA) - new Date(valB) : typeof valA === 'number' ? valA - valB : String(valA).localeCompare(String(valB));
                     return dir === 'asc' ? comp : -comp;
                 });
 
                 ui.updateSortIndicators();
-
                 dom['trades-body'].innerHTML = tradesWithMetrics.map(tradeWithMetrics => {
                     const { metrics, ...trade } = tradeWithMetrics;
                     const pl = trade.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
@@ -766,10 +755,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td data-label="P/L $" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${util.formatCurrency(pl)}</td>
                             <td data-label="P/L (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${r.toFixed(2)}R</td>
                             <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${trade.status}</span></td>
-                        </tr>
-                    `;
+                        </tr>`;
                 }).join('');
-
                 if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-500">No trades to display.</td></tr>`;
             },
             updateSortIndicators: () => {
@@ -786,74 +773,80 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'line',
                     data: { datasets: [{ label: 'NAV', data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
                     options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        scales: { 
-                            x: { 
-                                type: 'time', 
-                                time: { 
-                                    unit: 'day', 
-                                    tooltipFormat: 'MMM dd,yyyy' 
-                                }
-                            }, 
-                            y: { 
-                                ticks: { 
-                                    callback: v => util.formatCurrency(v) 
-                                }
-                            }
-                        }, 
-                        plugins: { 
-                            tooltip: { 
-                                callbacks: { 
-                                    label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` 
-                                }
-                            }
-                        } 
+                        responsive: true, maintainAspectRatio: false, 
+                        scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' } }, y: { ticks: { callback: v => util.formatCurrency(v) } } }, 
+                        plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } 
                     }
                 });
             },
             renderNavHistory: () => {
                 if (typeof window.dateFns === 'undefined') {
                     console.warn("date-fns library not loaded yet, skipping NAV history render.");
-                    return; 
+                    return;
                 }
 
                 const tabsContainer = dom['nav-history-tabs'];
                 const contentContainer = dom['nav-history-content'];
                 tabsContainer.innerHTML = '';
                 contentContainer.innerHTML = '';
-                
-                if (state.navHistory.length === 0) {
-                    contentContainer.innerHTML = '<p class="text-center py-4 text-slate-500">NAV history starts recording after closing trades or refreshing prices.</p>';
+
+                if (!state.navHistory || state.navHistory.length === 0) {
+                    contentContainer.innerHTML = '<p class="text-center py-4 text-slate-500">No NAV history to display. It records after closing trades or refreshing prices.</p>';
                     return;
                 }
-
-                const grouped = state.navHistory.reduce((acc, item) => {
+                
+                // Group by month
+                const groupedByMonth = state.navHistory.reduce((acc, item) => {
                     const monthKey = window.dateFns.format(new Date(item.date), 'yyyy-MM');
-                    if (!acc[monthKey]) acc[monthKey] = [];
+                    if (!acc[monthKey]) {
+                        acc[monthKey] = [];
+                    }
                     acc[monthKey].push(item);
                     return acc;
                 }, {});
 
-                const sortedMonthKeys = Object.keys(grouped).sort().reverse();
+                const sortedMonthKeys = Object.keys(groupedByMonth).sort().reverse();
 
+                // Create tabs for each month
                 sortedMonthKeys.forEach((key, index) => {
                     const monthDisplay = window.dateFns.format(new Date(key), 'MMM yy');
                     const isActive = index === 0;
                     tabsContainer.innerHTML += `<a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}" data-month="${key}">${monthDisplay}</a>`;
-                    
-                    const tableRows = grouped[key].sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => `<tr><td class="px-6 py-4">${util.formatDate(item.date)}</td><td class="px-6 py-4 text-sm text-slate-500">${util.formatTime(item.timestamp)}</td><td class="px-6 py-4">${util.formatCurrency(item.nav)}</td></tr>`).join('');
+                });
+
+                // Create content for each month's tab
+                sortedMonthKeys.forEach((key, index) => {
+                    const monthData = groupedByMonth[key];
+                    const isActive = index === 0;
+                    const tableRows = monthData
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .map(item => `
+                            <tr>
+                                <td class="px-6 py-4">${util.formatDate(item.date)}</td>
+                                <td class="px-6 py-4 text-sm text-slate-500">${util.formatTime(item.timestamp)}</td>
+                                <td class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
+                            </tr>
+                        `).join('');
+
                     contentContainer.innerHTML += `
                         <div id="nav-content-${key}" class="overflow-x-auto ${isActive ? '' : 'hidden'}">
                             <table class="min-w-full divide-y divide-slate-200 mt-4">
-                                <thead class="bg-slate-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Last Update</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">NAV</th></tr></thead>
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Last Update</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">NAV</th>
+                                    </tr>
+                                </thead>
                                 <tbody class="bg-white divide-y divide-slate-200">${tableRows}</tbody>
                             </table>
                         </div>
                     `;
                 });
 
-                tabsContainer.addEventListener('click', events.handleNavTabClick);
+                if (tabsContainer.innerHTML) {
+                    tabsContainer.addEventListener('click', events.handleNavTabClick);
+                }
             },
             showAdvancedStats: () => {
                 const s = calc.getAdvancedStats();
@@ -877,7 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- EVENTS ---
         const events = {
             init: () => {
-                // Main action buttons
                 dom['btn-add-trade'].onclick = events.handleAddTradeClick;
                 dom['btn-exit-trade'].onclick = () => { ui.populateOpenTradesDropdown('exit-select'); ui.openModal(dom['exit-modal']); };
                 dom['btn-update-stop'].onclick = () => { ui.populateOpenTradesDropdown('stop-select'); ui.openModal(dom['stop-modal']); };
@@ -892,13 +884,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-api-keys'].onclick = () => { 
                     dom['alphavantage-key'].value = state.settings.alphaVantageKey; 
                     dom['gemini-model'].value = state.settings.geminiModel; 
-                    dom['gemini-keys'].value = state.settings.apiKeys.join(', '); // Join with comma and space
+                    dom['gemini-keys'].value = state.settings.apiKeys.join(', ');
                     ui.openModal(dom['api-modal']); 
                 };
-
-                // Data & Analysis buttons
                 dom['btn-import'].onclick = () => dom['file-input'].click();
                 dom['file-input'].onchange = events.handleImport;
+                dom['btn-load-online'].onclick = events.handleLoadOnlineData;
                 dom['btn-export'].onclick = events.handleExport;
                 dom['btn-refresh'].onclick = api.refreshPrices;
                 dom['btn-view-stats'].onclick = ui.showAdvancedStats;
@@ -906,18 +897,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-analyze-portfolio'].onclick = events.handleAnalyzePortfolio;
                 dom['btn-describe-holdings'].onclick = events.handleDescribeHoldings;
                 
-                // Form submissions
                 dom['trade-form'].onsubmit = events.handleSaveTrade;
                 dom['exit-form'].onsubmit = events.handleSaveExit;
                 dom['stop-form'].onsubmit = events.handleSaveStop;
                 dom['settings-form'].onsubmit = events.handleSaveSettings;
                 dom['api-form'].onsubmit = events.handleSaveApiKeys;
 
-                // Table interactions
                 dom['trades-head'].onclick = events.handleSort;
                 dom['trades-body'].onclick = events.handleEditTrade;
 
-                // Modal specific buttons
                 dom['btn-find-sector'].onclick = events.handleFindSector;
                 dom['btn-analyze-trade'].onclick = events.handleAnalyzeTrade;
                 dom.modalCancelButtons.forEach(btn => btn.onclick = () => ui.closeModal(btn.closest('.modal-overlay')));
@@ -937,18 +925,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (riskZone === 'Yellow') {
                     util.showAlert('CAUTION: Your total open risk exposure exceeds 3R. Are you sure you want to add a new position?', 'confirm', (proceed) => {
                         if (proceed) {
-                            dom['trade-form'].reset(); 
-                            dom['modal-title'].textContent = 'Add New Trade'; 
-                            dom['trade-id'].value = ''; 
+                            dom['trade-form'].reset(); dom['modal-title'].textContent = 'Add New Trade'; dom['trade-id'].value = ''; 
                             ui.openModal(dom['trade-modal']);
                         }
                     });
                     return;
                 }
-                // Green Zone: proceed as normal
-                dom['trade-form'].reset(); 
-                dom['modal-title'].textContent = 'Add New Trade'; 
-                dom['trade-id'].value = ''; 
+                dom['trade-form'].reset(); dom['modal-title'].textContent = 'Add New Trade'; dom['trade-id'].value = ''; 
                 ui.openModal(dom['trade-modal']);
             },
             handleNavTabClick: (e) => {
@@ -1017,11 +1000,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.settings.riskPerTradePercentage = parseFloat(dom['set-risk-percent'].value);
                 state.settings.moderateDrawdownThreshold = parseFloat(dom['set-moderate-dd'].value);
                 state.settings.highRiskDrawdownThreshold = parseFloat(dom['set-high-risk-dd'].value);
-                
-                // Reset High Water Mark if initial capital changes
                 state.settings.highWaterMark = state.settings.initialCapital;
                 calc.recordNavPoint();
-
                 ui.closeModal(dom['settings-modal']); 
                 ui.render(); 
             },
@@ -1029,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault(); 
                 state.settings.alphaVantageKey = dom['alphavantage-key'].value.trim(); 
                 state.settings.geminiModel = dom['gemini-model'].value; 
-                state.settings.apiKeys = dom['gemini-keys'].value.split(',').map(k => k.trim()).filter(Boolean); // Split by comma
+                state.settings.apiKeys = dom['gemini-keys'].value.split(',').map(k => k.trim()).filter(Boolean);
                 state.settings.currentApiKeyIndex = 0; 
                 ui.closeModal(dom['api-modal']); 
                 util.showAlert(`API keys saved.`); 
@@ -1041,40 +1021,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.onload = (e) => {
                     try {
                         const data = JSON.parse(e.target.result);
-                        if (!data || !data.settings || !data.trades || !data.navHistory) throw new Error("Invalid or incomplete data format");
-                        
-                        const defaultSettings = {
-                            highWaterMark: data.settings.initialCapital,
-                            riskPerTradePercentage: 1.0,
-                            moderateDrawdownThreshold: 5,
-                            highRiskDrawdownThreshold: 10,
-                        };
-                        state.settings = { ...defaultSettings, ...data.settings };
-                        
-                        state.trades = data.trades;
-                        state.navHistory = data.navHistory.map(item => {
-                            if (!item.timestamp) {
-                                return { ...item, timestamp: new Date(item.date).toISOString() };
-                            }
-                            return item;
-                        });
-
-                        ui.render();
-                        util.showAlert('Data imported successfully!');
-                    } catch (err) { 
-                        util.showAlert(`Import failed: ${err.message}`); 
-                        console.error("Import Error:", err);
+                        loadDataIntoState(data);
+                    } catch (err) {
+                        util.showAlert(`Failed to parse JSON file: ${err.message}`);
                     }
                 };
                 reader.readAsText(file);
             },
+            handleLoadOnlineData: async () => {
+                const url = 'https://elclel8888.github.io/TradingJ/trading_journal_backup_2025-06-18.json';
+                ui.setLoading(dom['btn-load-online'], true, 'Loading...');
+                try {
+                    const response = await fetch(url, { cache: 'no-cache' }); 
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    loadDataIntoState(data);
+                } catch (error) {
+                    util.showAlert(`Failed to load online data: ${error.message}. Check the console for more details.`);
+                    console.error('Failed to fetch online data:', error);
+                } finally {
+                    ui.setLoading(dom['btn-load-online'], false);
+                }
+            },
             handleExport: () => {
-                const data = JSON.stringify({
-                    settings: state.settings,
-                    trades: state.trades,
-                    navHistory: state.navHistory
-                }, null, 2);
-                
+                const data = JSON.stringify({ settings: state.settings, trades: state.trades, navHistory: state.navHistory }, null, 2);
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
                 a.download = `trading_journal_backup_${new Date().toISOString().split('T')[0]}.json`;
@@ -1187,8 +1159,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
-                const dateStr = d.toISOString().split('T')[0];
-                state.navHistory.push({ date: dateStr, nav: state.settings.initialCapital, timestamp: d.toISOString() });
+                state.navHistory.push({ 
+                    date: d.toISOString().split('T')[0], 
+                    nav: state.settings.initialCapital,
+                    timestamp: d.toISOString() // Ensure the initial record has a timestamp
+                });
             }
             ui.render();
         };
