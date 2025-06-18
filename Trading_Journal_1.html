@@ -833,7 +833,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if(labels.length === 0){
                     dom['allocation-chart'].style.display = 'none';
-                    dom['allocation-chart'].parentElement.innerHTML += '<p class="text-slate-400 text-center">No open positions to display.</p>';
+                    const placeholder = dom['allocation-chart'].parentElement.querySelector('p');
+                    if(!placeholder) {
+                        dom['allocation-chart'].parentElement.innerHTML += '<p class="text-slate-400 text-center">No open positions to display.</p>';
+                    }
                     return;
                 } else {
                      dom['allocation-chart'].style.display = 'block';
