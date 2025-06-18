@@ -385,6 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const d = new Date(dateStr);
                 return new Date(d.getTime() + d.getTimezoneOffset() * 60000).toLocaleDateString('en-CA');
             },
+            formatTime: (isoString) => {
+                if (!isoString) return '';
+                return new Date(isoString).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            },
             formatDuration: (ms) => {
                 if (ms < 0 || isNaN(ms)) return 'N/A';
                 const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
@@ -503,13 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         errorMessages.add(`Network error for ${trade.ticker}. Check console.`);
                     }
 
-                    calc.recordNavPoint();
-                    ui.render();
-
                     if (openTrades.indexOf(trade) < openTrades.length - 1) {
                         await new Promise(resolve => setTimeout(resolve, 12000));
                     }
                 }
+
+                calc.recordNavPoint(); // Record NAV once after all prices are fetched
+                ui.render();
                 
                 if (errorMessages.size > 0) {
                     util.showAlert(`Price refresh completed with some issues:<br>- ${Array.from(errorMessages).join('<br>- ')}`);
@@ -624,15 +632,20 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             recordNavPoint: () => {
                 const { nav } = calc.getRiskMetrics();
-                const today = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const today = now.toISOString().split('T')[0];
+                const timestamp = now.toISOString();
+
                 const idx = state.navHistory.findIndex(e => e.date === today);
                 if (idx > -1) {
-                    if (state.navHistory[idx].nav !== parseFloat(nav.toFixed(2))) {
-                       state.navHistory[idx].nav = parseFloat(nav.toFixed(2));
-                    }
+                    // Update the latest NAV and timestamp for the day
+                    state.navHistory[idx].nav = parseFloat(nav.toFixed(2));
+                    state.navHistory[idx].timestamp = timestamp;
                 } else {
-                    state.navHistory.push({ date: today, nav: parseFloat(nav.toFixed(2)) });
+                    // Add a new entry for the day
+                    state.navHistory.push({ date: today, nav: parseFloat(nav.toFixed(2)), timestamp: timestamp });
                 }
+                // Sort by date, which is sufficient as there's only one entry per date
                 state.navHistory.sort((a,b) => new Date(a.date) - new Date(b.date));
             }
         };
@@ -829,11 +842,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isActive = index === 0;
                     tabsContainer.innerHTML += `<a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}" data-month="${key}">${monthDisplay}</a>`;
                     
-                    const tableRows = grouped[key].sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => `<tr><td class="px-6 py-4">${util.formatDate(item.date)}</td><td class="px-6 py-4">${util.formatCurrency(item.nav)}</td></tr>`).join('');
+                    const tableRows = grouped[key].sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => `<tr><td class="px-6 py-4">${util.formatDate(item.date)}</td><td class="px-6 py-4 text-sm text-slate-500">${util.formatTime(item.timestamp)}</td><td class="px-6 py-4">${util.formatCurrency(item.nav)}</td></tr>`).join('');
                     contentContainer.innerHTML += `
                         <div id="nav-content-${key}" class="overflow-x-auto ${isActive ? '' : 'hidden'}">
                             <table class="min-w-full divide-y divide-slate-200 mt-4">
-                                <thead class="bg-slate-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">NAV</th></tr></thead>
+                                <thead class="bg-slate-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Last Update</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">NAV</th></tr></thead>
                                 <tbody class="bg-white divide-y divide-slate-200">${tableRows}</tbody>
                             </table>
                         </div>
@@ -971,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.trades.push({ ...tradeData, id: `trade-${Date.now()}`, status: 'Open', currentPrice: null });
                 }
                 ui.closeModal(dom['trade-modal']);
+                calc.recordNavPoint();
                 ui.render();
             },
             handleSaveExit: (e) => {
@@ -1029,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         const data = JSON.parse(e.target.result);
                         if (!data || !data.settings || !data.trades || !data.navHistory) throw new Error("Invalid or incomplete data format");
                         
-                        // Merge imported settings with defaults to ensure new properties exist
                         const defaultSettings = {
                             highWaterMark: data.settings.initialCapital,
                             riskPerTradePercentage: 1.0,
@@ -1039,7 +1052,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         state.settings = { ...defaultSettings, ...data.settings };
                         
                         state.trades = data.trades;
-                        state.navHistory = data.navHistory;
+                        state.navHistory = data.navHistory.map(item => {
+                            if (!item.timestamp) {
+                                return { ...item, timestamp: new Date(item.date).toISOString() };
+                            }
+                            return item;
+                        });
 
                         ui.render();
                         util.showAlert('Data imported successfully!');
@@ -1169,7 +1187,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
-                state.navHistory.push({ date: d.toISOString().split('T')[0], nav: state.settings.initialCapital });
+                const dateStr = d.toISOString().split('T')[0];
+                state.navHistory.push({ date: dateStr, nav: state.settings.initialCapital, timestamp: d.toISOString() });
             }
             ui.render();
         };
