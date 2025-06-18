@@ -73,6 +73,13 @@
 
             <!-- Side Column -->
             <aside class="space-y-8">
+                 <!-- Portfolio Allocation Chart -->
+                 <section id="portfolio-allocation-section" class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold mb-4 text-slate-800">Portfolio Allocation</h2>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="allocation-chart"></canvas>
+                    </div>
+                </section>
                  <!-- Risk Exposure Dashboard -->
                 <section id="risk-exposure-dashboard" class="bg-white p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4 text-slate-800">Risk Exposure</h2>
@@ -179,8 +186,29 @@
                     <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
                     <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
                     <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
-                    <div class="md:col-span-2"><label for="remarks" class="block text-sm font-medium">Remarks</label><textarea id="remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
                 </div>
+                
+                <hr class="my-6">
+                <h3 class="text-lg font-semibold mb-4">Trade Psychology</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                        <label for="emotional-state" class="block text-sm font-medium">Emotional State</label>
+                        <select id="emotional-state" class="mt-1 block w-full input">
+                            <option>Neutral</option>
+                            <option>Confident</option>
+                            <option>Anxious</option>
+                            <option>Greedy</option>
+                            <option>Fearful</option>
+                            <option>FOMO</option>
+                            <option>Disciplined</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="mt-4">
+                    <label for="psychology-notes" class="block text-sm font-medium">Psychology Notes</label>
+                    <textarea id="psychology-notes" rows="3" class="mt-1 block w-full input"></textarea>
+                </div>
+                
                 <div class="mt-6 flex justify-between items-center">
                     <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 py-2 px-4 rounded-md">✨ Analyze</button>
                     <div><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
@@ -335,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             trades: [],
             navHistory: [],
             navChart: null,
+            allocationChart: null,
             settings: { 
                 initialCapital: 10, 
                 currentCash: 10,
@@ -358,11 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
                 'btn-settings', 'btn-api-keys', 'btn-view-stats', 'btn-gen-summary', 'btn-analyze-portfolio',
-                'btn-describe-holdings',
+                'btn-describe-holdings', 'allocation-chart',
                 'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk',
                 'trades-table', 'trades-head', 'trades-body', 'nav-history-tabs', 'nav-history-content',
                 'trade-modal', 'modal-title', 'trade-form', 'trade-id', 'ticker', 'entry-date', 'entry-price', 
-                'position', 'initial-stop', 'sector', 'tags', 'remarks', 'btn-find-sector', 'btn-analyze-trade',
+                'position', 'initial-stop', 'sector', 'tags', 'emotional-state', 'psychology-notes', 'btn-find-sector', 'btn-analyze-trade',
                 'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price',
                 'stop-modal', 'stop-form', 'stop-select', 'new-stop',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
@@ -659,7 +688,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- UI ---
         const ui = {
-            render: () => { ui.updateDashboard(); ui.renderTrades(); ui.renderNavChart(); ui.renderNavHistory(); },
+            render: () => { 
+                ui.updateDashboard(); 
+                ui.renderTrades(); 
+                ui.renderNavChart(); 
+                ui.renderAllocationChart();
+                ui.renderNavHistory(); 
+            },
             openModal: (el) => { el.classList.remove('hidden'); setTimeout(() => el.classList.remove('opacity-0'), 10); },
             closeModal: (el) => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); },
             setLoading: (btn, loading, text = '') => {
@@ -712,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const zoneEl = dom['risk-zone'];
                 zoneEl.textContent = riskZone;
-                zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full'; // Reset classes
+                zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
                 if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800');
                 else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
                 else zoneEl.classList.add('bg-red-100', 'text-red-800');
@@ -776,6 +811,77 @@ document.addEventListener('DOMContentLoaded', () => {
                         responsive: true, maintainAspectRatio: false, 
                         scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' } }, y: { ticks: { callback: v => util.formatCurrency(v) } } }, 
                         plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } 
+                    }
+                });
+            },
+            renderAllocationChart: () => {
+                const openTrades = state.trades.filter(t => t.status === 'Open');
+                const allocation = openTrades.reduce((acc, trade) => {
+                    const sector = trade.sector || 'Uncategorized';
+                    const value = (trade.currentPrice || trade.entryPrice) * trade.position;
+                    acc[sector] = (acc[sector] || 0) + value;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(allocation);
+                const data = Object.values(allocation);
+
+                const ctx = dom['allocation-chart'].getContext('2d');
+                if (state.allocationChart) {
+                    state.allocationChart.destroy();
+                }
+
+                if(labels.length === 0){
+                    dom['allocation-chart'].style.display = 'none';
+                    dom['allocation-chart'].parentElement.innerHTML += '<p class="text-slate-400 text-center">No open positions to display.</p>';
+                    return;
+                } else {
+                     dom['allocation-chart'].style.display = 'block';
+                     const placeholder = dom['allocation-chart'].parentElement.querySelector('p');
+                     if(placeholder) placeholder.remove();
+                }
+
+                state.allocationChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Portfolio Allocation',
+                            data: data,
+                            backgroundColor: [
+                                '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899',
+                                '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += util.formatCurrency(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
             },
@@ -958,8 +1064,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     position: parseInt(dom.position.value),
                     initialStop: parseFloat(dom['initial-stop'].value),
                     sector: dom.sector.value,
-                    remarks: dom.remarks.value,
-                    tags: dom.tags.value.split(',').map(t => t.trim()).filter(Boolean)
+                    tags: dom.tags.value.split(',').map(t => t.trim()).filter(Boolean),
+                    emotionalState: dom['emotional-state'].value,
+                    psychologyNotes: dom['psychology-notes'].value
                 };
                 if (id) {
                     Object.assign(state.trades.find(t => t.id === id), tradeData);
@@ -1076,7 +1183,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         dom['initial-stop'].value = trade.initialStop;
                         dom.sector.value = trade.sector || '';
                         dom.tags.value = trade.tags ? trade.tags.join(', ') : '';
-                        dom.remarks.value = trade.remarks || '';
+                        dom['emotional-state'].value = trade.emotionalState || 'Neutral';
+                        dom['psychology-notes'].value = trade.psychologyNotes || '';
                         ui.openModal(dom['trade-modal']);
                     }
                 }
@@ -1121,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `For ticker ${t.ticker}, the trade status is ${t.status}. Entry was on ${util.formatDate(t.entryDate)} at a price of ${util.formatCurrency(t.entryPrice)} with a position size of ${t.position}. The initial stop was ${util.formatCurrency(t.initialStop)}. ` +
                            (t.trailingStop ? `The trailing stop is currently ${util.formatCurrency(t.trailingStop)}. ` : '') +
                            (t.status === 'Closed' ? `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. ` : `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}. `) +
-                           `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My remarks were: '${t.remarks || 'None'}'.`;
+                           `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My emotional state was ${t.emotionalState || 'not recorded'}, and my notes were: '${t.psychologyNotes || 'None'}'.`;
                 }).join(' ');
 
                 const prompt = `Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n${tradeDetails}`;
