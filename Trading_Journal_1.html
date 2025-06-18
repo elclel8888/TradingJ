@@ -823,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tabsContainer.innerHTML = '';
                 contentContainer.innerHTML = '';
                 
-                if (state.navHistory.length <= 1) {
+                if (state.navHistory.length === 0) {
                     contentContainer.innerHTML = '<p class="text-center py-4 text-slate-500">NAV history starts recording after closing trades or refreshing prices.</p>';
                     return;
                 }
