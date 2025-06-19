@@ -10,17 +10,42 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        :root {
+            --bg-primary: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+        }
+
+        .dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .modal-content, .stat-card, header, section {
+             background-color: var(--bg-secondary);
+             transition: background-color 0.3s;
+             border-color: var(--border-color);
+        }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
-        .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; overscroll-behavior: contain; }
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; border-left-width: 4px; }
+        .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
         .btn { transition: all 0.2s ease-in-out; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .btn:active { transform: translateY(-1px) scale(0.98); }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #e2e8f0; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         .loader, .loader-sm { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         .loader { width: 30px; height: 30px; border-width: 4px; }
@@ -28,45 +53,55 @@
         .gradient-text { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .alert-modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         .alert-modal-overlay.visible { opacity: 1; pointer-events: auto; }
-        .alert-modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease; }
+        .alert-modal-content { background-color: var(--bg-secondary); padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
         .alert-modal-overlay.visible .alert-modal-content { transform: scale(1); }
         
         /* Responsive Table */
         @media (max-width: 1023px) {
-            #trades-table thead { display: none; }
-            #trades-table, #trades-table tbody, #trades-table tr { display: block; width: 100%; }
-            #trades-table tbody tr { margin-bottom: 1.5rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); cursor: pointer; }
-            #trades-table tbody td { display: flex; justify-content: space-between; align-items: center; text-align: right; padding: 0.75rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
-            #trades-table tbody td:last-child { border-bottom: none; }
-            #trades-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: #475569; }
+            #trades-table thead, #nav-history-table thead { display: none; }
+            #trades-table, #trades-table tbody, #trades-table tr,
+            #nav-history-table, #nav-history-table tbody, #nav-history-table tr { display: block; width: 100%; }
+            #trades-table tbody tr, #nav-history-table tbody tr { margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; background-color: var(--bg-secondary); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); cursor: pointer; }
+            #trades-table tbody td, #nav-history-table tbody td { display: flex; justify-content: space-between; align-items: center; text-align: right; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+            #trades-table tbody td:last-child, #nav-history-table tbody td:last-child { border-bottom: none; }
+            #trades-table tbody td::before, #nav-history-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: var(--text-secondary); }
         }
+        .dark .bg-slate-50 { background-color: #334155; }
+        .dark .text-slate-500 { color: #94a3b8; }
+        .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #475569; }
+        .dark .input { background-color: #334155; border-color: #475569; color: #e2e8f0; }
+        .dark .btn-cancel { background-color: #475569; color: #e2e8f0; }
     </style>
 </head>
 <body class="text-slate-800">
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-        <header class="mb-8 p-6 bg-white rounded-xl shadow-md">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 gradient-text">Trading Journal</h1>
-            <p class="mt-2 text-slate-500">Track your trades, analyze your performance, and refine your strategy.</p>
+        <header class="mb-8 p-6 bg-white rounded-xl shadow-md relative">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">Trading Journal</h1>
+            <p class="mt-2 text-secondary">Track your trades, analyze your performance, and refine your strategy.</p>
+            <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+                <svg id="theme-icon-light" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-8">
                 <!-- Stat Cards Grid -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-blue-500 sm:col-span-2"><h3 class="text-sm font-medium text-slate-500">Total Assets</h3><p id="total-assets" class="text-2xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-slate-500"><h3 class="text-sm font-medium text-slate-500">Current Cash</h3><p id="current-cash" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-slate-500">Unrealized P/L</h3><p id="unrealized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-slate-500">Total Open P/L (R)</h3><p id="total-open-r" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-orange-500"><h3 class="text-sm font-medium text-slate-500">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-slate-500">Realized P/L</h3><p id="realized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-slate-500">Win Rate</h3><p id="win-rate" class="text-xl font-semibold mt-1">0%</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-slate-500">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-blue-500 sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-2xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-slate-500"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-xl font-semibold mt-1">0.00R</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-orange-500"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-xl font-semibold mt-1">0.00R</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-xl font-semibold mt-1">0%</p></div>
+                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
                 </section>
 
                 <!-- NAV Chart -->
                 <section class="bg-white p-4 md:p-6 rounded-lg shadow h-64 sm:h-80 lg:h-96">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Net Asset Value (NAV)</h2>
+                    <h2 class="text-xl font-bold mb-4">Net Asset Value (NAV)</h2>
                     <canvas id="nav-chart"></canvas>
                 </section>
             </div>
@@ -75,36 +110,37 @@
             <aside class="space-y-8">
                  <!-- Portfolio Allocation Chart -->
                  <section id="portfolio-allocation-section" class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Portfolio Allocation</h2>
-                    <div class="h-64 flex items-center justify-center">
+                    <h2 class="text-xl font-bold mb-4">Portfolio Allocation</h2>
+                    <div id="allocation-chart-container" class="h-64 flex items-center justify-center">
                         <canvas id="allocation-chart"></canvas>
+                        <p id="allocation-placeholder" class="text-slate-400 text-center hidden"></p>
                     </div>
                 </section>
                  <!-- Risk Exposure Dashboard -->
                 <section id="risk-exposure-dashboard" class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Risk Exposure</h2>
+                    <h2 class="text-xl font-bold mb-4">Risk Exposure</h2>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between">
-                            <span class="font-medium text-slate-500">High-Water Mark</span>
-                            <span id="high-water-mark" class="font-semibold text-slate-800">$0.00</span>
+                            <span class="font-medium text-secondary">High-Water Mark</span>
+                            <span id="high-water-mark" class="font-semibold">$0.00</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-medium text-slate-500">Current Drawdown</span>
-                            <span id="current-drawdown" class="font-semibold text-slate-800">$0.00 (0.00%)</span>
+                            <span class="font-medium text-secondary">Current Drawdown</span>
+                            <span id="current-drawdown" class="font-semibold">$0.00 (0.00%)</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-medium text-slate-500">Total Open Risk</span>
-                            <span id="total-open-risk" class="font-semibold text-slate-800">0.00R</span>
+                            <span class="font-medium text-secondary">Total Open Risk</span>
+                            <span id="total-open-risk" class="font-semibold">0.00R</span>
                         </div>
                         <div class="flex justify-between items-center mt-2 pt-3 border-t">
-                            <span class="font-medium text-slate-500">Risk Zone</span>
+                            <span class="font-medium text-secondary">Risk Zone</span>
                             <span id="risk-zone" class="px-3 py-1 text-sm font-bold rounded-full"></span>
                         </div>
                     </div>
                 </section>
 
                 <section class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Data Management</h2>
+                    <h2 class="text-xl font-bold mb-4">Data Management</h2>
                     <div class="space-y-4">
                         <button id="btn-import" class="btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-md">Import Local Data</button>
                         <input type="file" id="file-input" class="hidden" accept=".json">
@@ -114,7 +150,7 @@
                 </section>
                 
                 <section class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Actions</h2>
+                    <h2 class="text-xl font-bold mb-4">Actions</h2>
                     <div class="space-y-4">
                         <button id="btn-add-trade" class="btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-md">Add New Trade</button>
                         <button id="btn-update-stop" class="btn w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 px-4 rounded-md">Update Trailing Stop</button>
@@ -127,12 +163,12 @@
                 </section>
                 
                 <section class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4 text-slate-800">Configuration & Analysis</h2>
+                    <h2 class="text-xl font-bold mb-4">Configuration & Analysis</h2>
                     <div class="space-y-4">
                         <button id="btn-settings" class="btn w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
                         <button id="btn-api-keys" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">API Key Settings</button>
                         <button id="btn-view-stats" class="btn w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
-                        <hr>
+                        <hr class="border-border-color">
                         <button id="btn-gen-summary" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
                         <button id="btn-analyze-portfolio" class="btn w-full bg-gradient-to-r from-sky-500 to-sky-600 text-white py-2 px-4 rounded-md">📈 Analyze Current Portfolio</button>
                         <button id="btn-describe-holdings" class="btn w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2 px-4 rounded-md">📄 Describe Trade History</button>
@@ -142,33 +178,32 @@
         </div>
 
         <section class="mt-8 bg-white p-4 md:p-6 rounded-lg shadow">
-             <h2 class="text-xl font-bold mb-4 text-slate-800">Trade History</h2>
+             <h2 class="text-xl font-bold mb-4">Trade History</h2>
              <div class="overflow-x-auto">
                 <table id="trades-table" class="min-w-full">
                     <thead id="trades-head" class="bg-slate-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="ticker">Ticker</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="entryDate">Entry Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="entryPrice">Entry Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="currentPrice">Current Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="position">Position</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="initialStop">Initial Stop</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="initialR">Initial Risk (Acct. R)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="trailingStop">Trailing Stop</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="plDollars">P/L $</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="plR">P/L (Acct. R)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider sortable" data-sort="status">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="ticker">Ticker</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryDate">Entry Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryPrice">Entry Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="currentPrice">Current Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="position">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialStop">Initial Stop</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialR">Initial Risk (Acct. R)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="trailingStop">Trailing Stop</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plDollars">P/L $</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plR">P/L (Acct. R)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="status">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="trades-body" class="bg-white divide-y divide-slate-200"></tbody>
+                    <tbody id="trades-body" class="bg-white divide-y divide-border-color"></tbody>
                 </table>
              </div>
         </section>
 
         <section class="mt-8 bg-white p-4 md:p-6 rounded-lg shadow">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">NAV History</h2>
-            <nav id="nav-history-tabs" class="-mb-px flex space-x-6 border-b border-slate-200" aria-label="Tabs"></nav>
-            <div id="nav-history-content" class="mt-4"></div>
+            <h2 class="text-xl font-bold mb-4">NAV History</h2>
+            <div id="nav-history-container" class="overflow-x-auto"></div>
         </section>
     </main>
 
@@ -188,7 +223,7 @@
                     <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
                 </div>
                 
-                <hr class="my-6">
+                <hr class="my-6 border-border-color">
                 <h3 class="text-lg font-semibold mb-4">Trade Psychology</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
@@ -225,6 +260,7 @@
                     <div><label for="exit-select" class="block text-sm font-medium">Select Open Trade</label><select id="exit-select" required class="mt-1 block w-full input"></select></div>
                     <div><label for="exit-date" class="block text-sm font-medium">Exit Date</label><input type="date" id="exit-date" required class="mt-1 block w-full input"></div>
                     <div><label for="exit-price" class="block text-sm font-medium">Exit Price</label><input type="number" step="any" id="exit-price" required class="mt-1 block w-full input"></div>
+                    <div><label for="exit-remarks" class="block text-sm font-medium">Exit Remarks</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-red-600 text-white py-2 px-4 rounded-md">Save Exit</button></div>
             </form>
@@ -284,7 +320,7 @@
     <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ Weekly Performance Summary</h2>
-            <div id="summary-content" class="prose max-w-none text-slate-700 space-y-4"></div>
+            <div id="summary-content" class="prose max-w-none text-secondary space-y-4"></div>
             <div class="mt-6 flex justify-end space-x-3">
                 <button type="button" id="btn-copy-summary" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -295,7 +331,7 @@
     <div id="stats-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">Advanced Statistics</h2>
-            <div id="stats-content" class="prose max-w-none text-slate-700 space-y-4"></div>
+            <div id="stats-content" class="prose max-w-none text-secondary space-y-4"></div>
             <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button></div>
         </div>
     </div>
@@ -303,7 +339,7 @@
     <div id="portfolio-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📈 Current Portfolio Analysis</h2>
-            <div id="portfolio-content" class="prose max-w-none text-slate-700 space-y-4"></div>
+            <div id="portfolio-content" class="prose max-w-none text-secondary space-y-4"></div>
             <div class="mt-6 flex justify-end space-x-3">
                 <button type="button" id="btn-copy-portfolio" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -314,7 +350,7 @@
     <div id="holdings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📄 Trade History Description</h2>
-            <div id="holdings-content" class="prose max-w-none text-slate-700 space-y-4"></div>
+            <div id="holdings-content" class="prose max-w-none text-secondary space-y-4"></div>
             <div class="mt-6 flex justify-end space-x-3">
                 <button type="button" id="btn-copy-holdings" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -325,7 +361,7 @@
     <div id="ai-trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ AI Trade Analysis</h2>
-            <div id="ai-trade-content" class="prose max-w-none text-slate-700 space-y-4"></div>
+            <div id="ai-trade-content" class="prose max-w-none text-secondary space-y-4"></div>
             <div class="mt-6 flex justify-end space-x-3">
                  <button type="button" id="btn-copy-ai-trade" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -374,7 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiKeys: [],
                 alphaVantageKey: '',
                 currentApiKeyIndex: 0, 
-                geminiModel: 'gemini-1.5-flash-latest'
+                geminiModel: 'gemini-1.5-flash-latest',
+                theme: 'light'
             },
             sort: { key: 'entryDate', dir: 'desc' }
         };
@@ -387,12 +424,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
                 'btn-settings', 'btn-api-keys', 'btn-view-stats', 'btn-gen-summary', 'btn-analyze-portfolio',
-                'btn-describe-holdings', 'allocation-chart',
+                'btn-describe-holdings', 'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
                 'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk',
-                'trades-table', 'trades-head', 'trades-body', 'nav-history-tabs', 'nav-history-content',
+                'nav-history-container',
+                'trades-table', 'trades-head', 'trades-body', 
                 'trade-modal', 'modal-title', 'trade-form', 'trade-id', 'ticker', 'entry-date', 'entry-price', 
                 'position', 'initial-stop', 'sector', 'tags', 'emotional-state', 'psychology-notes', 'btn-find-sector', 'btn-analyze-trade',
-                'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price',
+                'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price', 'exit-remarks',
                 'stop-modal', 'stop-form', 'stop-select', 'new-stop',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
                 'api-modal', 'api-form', 'alphavantage-key', 'gemini-model', 'gemini-keys',
@@ -401,7 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'ai-trade-modal', 'ai-trade-content',
                 'sector-modal', 'sector-content', 'alert-modal', 'alert-msg', 'alert-ok',
                 'btn-alert-ok', 'alert-confirm', 'btn-confirm-cancel', 'btn-confirm-ok',
-                'btn-copy-summary', 'btn-copy-portfolio', 'btn-copy-ai-trade'
+                'btn-copy-summary', 'btn-copy-portfolio', 'btn-copy-ai-trade',
+                'theme-toggle', 'theme-icon-light', 'theme-icon-dark'
             ];
             ids.forEach(id => dom[id] = document.getElementById(id));
             dom.modalCancelButtons = document.querySelectorAll('.btn-cancel');
@@ -417,11 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             formatTime: (isoString) => {
                 if (!isoString) return '';
-                return new Date(isoString).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                });
+                return new Date(isoString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             },
             formatDuration: (ms) => {
                 if (ms < 0 || isNaN(ms)) return 'N/A';
@@ -432,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['alert-msg'].innerHTML = msg;
                 const okDiv = dom['alert-ok'];
                 const confirmDiv = dom['alert-confirm'];
-                
                 if (type === 'confirm') {
                     okDiv.classList.add('hidden');
                     confirmDiv.classList.remove('hidden');
@@ -448,10 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             closeAlert: () => dom['alert-modal'].classList.remove('visible'),
             copyToClipboard: (text, message = 'Copied to clipboard!') => {
-                if (!text) {
-                    util.showAlert('Nothing to copy.');
-                    return;
-                }
+                if (!text) { util.showAlert('Nothing to copy.'); return; }
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 textArea.style.position = 'fixed';
@@ -490,21 +521,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-                        
                         if (res.ok) {
                             const result = await res.json();
                             const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) {
-                                state.settings.currentApiKeyIndex = (keyIndex + 1) % apiKeys.length;
-                                return text; 
-                            }
+                            if (text) { state.settings.currentApiKeyIndex = (keyIndex + 1) % apiKeys.length; return text; }
                         }
                         const errorData = await res.json().catch(() => ({}));
                         console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Status ${res.status}. ${errorData?.error?.message || 'Unknown error.'}`);
-
-                    } catch (error) {
-                        console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Network Error - ${error.message}`);
-                    }
+                    } catch (error) { console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Network Error - ${error.message}`); }
                 }
                 
                 const finalUserMessage = `All API keys failed. Please check your keys or the browser console for details.`;
@@ -519,15 +543,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 ui.setLoading(dom['btn-refresh'], true, 'Refreshing...');
                 const errorMessages = new Set();
-
                 for (const trade of openTrades) {
                     try {
                         const symbol = trade.ticker.trim();
                         const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${state.settings.alphaVantageKey}`;
-                        
                         const res = await fetch(url);
                         const data = await res.json();
-                        
                         const price = data?.['Global Quote']?.['05. price'];
                         if (price) {
                             trade.currentPrice = parseFloat(price);
@@ -540,21 +561,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error(`Error fetching price for ${trade.ticker}:`, error);
                         errorMessages.add(`Network error for ${trade.ticker}. Check console.`);
                     }
-
-                    if (openTrades.indexOf(trade) < openTrades.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 12000));
-                    }
+                    if (openTrades.indexOf(trade) < openTrades.length - 1) { await new Promise(resolve => setTimeout(resolve, 12000)); }
                 }
-
                 calc.recordNavPoint(); 
                 ui.render();
-                
-                if (errorMessages.size > 0) {
-                    util.showAlert(`Price refresh completed with some issues:<br>- ${Array.from(errorMessages).join('<br>- ')}`);
-                } else {
-                    util.showAlert('All prices refreshed successfully!');
-                }
-                
+                if (errorMessages.size > 0) { util.showAlert(`Price refresh completed with some issues:<br>- ${Array.from(errorMessages).join('<br>- ')}`); }
+                else { util.showAlert('All prices refreshed successfully!'); }
                 ui.setLoading(dom['btn-refresh'], false);
             }
         };
@@ -564,25 +576,10 @@ document.addEventListener('DOMContentLoaded', () => {
             getTradeMetrics: (trade) => {
                 const { initialCapital, riskPerTradePercentage } = state.settings;
                 const accountRValue = initialCapital * (riskPerTradePercentage / 100);
-
-                const metrics = {
-                    tradeRiskInDollars: 0,
-                    initialR: 0, 
-                    realizedPL: 0, 
-                    realizedR: 0, 
-                    unrealizedPL: 0, 
-                    unrealizedR: 0
-                };
-
-                if (!trade.entryPrice || !trade.initialStop || !trade.position) {
-                    return metrics;
-                }
-
+                const metrics = { tradeRiskInDollars: 0, initialR: 0, realizedPL: 0, realizedR: 0, unrealizedPL: 0, unrealizedR: 0 };
+                if (!trade.entryPrice || !trade.initialStop || !trade.position) { return metrics; }
                 metrics.tradeRiskInDollars = (trade.entryPrice - trade.initialStop) * trade.position;
-                if (accountRValue > 0) {
-                    metrics.initialR = metrics.tradeRiskInDollars / accountRValue;
-                }
-                
+                if (accountRValue > 0) { metrics.initialR = metrics.tradeRiskInDollars / accountRValue; }
                 if (trade.status === 'Open' && trade.currentPrice) {
                     metrics.unrealizedPL = (trade.currentPrice - trade.entryPrice) * trade.position;
                     if (accountRValue > 0) metrics.unrealizedR = metrics.unrealizedPL / accountRValue;
@@ -601,9 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (trade.trailingStop && trade.currentPrice > 0 && trade.position > 0) {
                     riskInDollars = (trade.currentPrice - trade.trailingStop) * trade.position;
                     return riskInDollars / accountRValue;
-                } else { 
-                    return calc.getTradeMetrics(trade).initialR;
-                }
+                } else { return calc.getTradeMetrics(trade).initialR; }
             },
             getRiskMetrics: () => {
                 const openValue = state.trades.filter(t => t.status === 'Open').reduce((s, t) => s + ((t.currentPrice || t.entryPrice) * t.position), 0);
@@ -628,25 +623,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const avgWin = winners.length ? totalGains / winners.length : 0;
                 const totalLosses = losers.reduce((s, t) => s + calc.getTradeMetrics(t).realizedPL, 0);
                 const avgLoss = losers.length ? Math.abs(totalLosses / losers.length) : 0;
-                return {
-                    total: closed.length,
-                    expectancy: (winRate * avgWin) - ((1 - winRate) * avgLoss),
-                    winners: winners.length,
-                    losers: losers.length,
-                    avgWin: avgWin,
-                    largestWin: winners.reduce((max, t) => Math.max(max, calc.getTradeMetrics(t).realizedPL), 0),
-                    avgLoss: avgLoss,
-                    largestLoss: losers.reduce((min, t) => Math.min(min, calc.getTradeMetrics(t).realizedPL), 0),
-                    avgWinHold: winners.length ? winners.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / winners.length : 0,
-                    avgLossHold: losers.length ? losers.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / losers.length : 0,
-                };
+                return { total: closed.length, expectancy: (winRate * avgWin) - ((1 - winRate) * avgLoss), winners: winners.length, losers: losers.length, avgWin: avgWin, largestWin: winners.reduce((max, t) => Math.max(max, calc.getTradeMetrics(t).realizedPL), 0), avgLoss: avgLoss, largestLoss: losers.reduce((min, t) => Math.min(min, calc.getTradeMetrics(t).realizedPL), 0), avgWinHold: winners.length ? winners.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / winners.length : 0, avgLossHold: losers.length ? losers.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / losers.length : 0, };
             },
             recordNavPoint: () => {
                 const { nav } = calc.getRiskMetrics();
                 const now = new Date();
                 const today = now.toISOString().split('T')[0];
                 const timestamp = now.toISOString();
-
                 const idx = state.navHistory.findIndex(e => e.date === today);
                 if (idx > -1) {
                     state.navHistory[idx].nav = parseFloat(nav.toFixed(2));
@@ -660,24 +643,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const loadDataIntoState = (data) => {
             try {
-                if (!data || !data.settings || !data.trades || !data.navHistory) {
-                    throw new Error("Invalid or incomplete data format");
-                }
-                
-                const defaultSettings = {
-                    highWaterMark: data.settings.initialCapital,
-                    riskPerTradePercentage: 1.0,
-                    moderateDrawdownThreshold: 5,
-                    highRiskDrawdownThreshold: 10,
-                };
+                if (!data || !data.settings || !data.trades || !data.navHistory) { throw new Error("Invalid or incomplete data format"); }
+                const defaultSettings = { highWaterMark: data.settings.initialCapital, riskPerTradePercentage: 1.0, moderateDrawdownThreshold: 5, highRiskDrawdownThreshold: 10, theme: 'light' };
                 state.settings = { ...defaultSettings, ...data.settings };
-                
                 state.trades = data.trades;
-                state.navHistory = data.navHistory.map(item => ({ 
-                    ...item, 
-                    timestamp: item.timestamp || new Date(item.date).toISOString() 
-                }));
-
+                state.navHistory = data.navHistory.map(item => ({ ...item, timestamp: item.timestamp || new Date(item.date).toISOString() }));
+                ui.applyTheme(state.settings.theme);
                 ui.render();
                 util.showAlert('Data loaded successfully!');
             } catch (err) { 
@@ -694,6 +665,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.renderNavChart(); 
                 ui.renderAllocationChart();
                 ui.renderNavHistory(); 
+            },
+            applyTheme: (theme) => {
+                state.settings.theme = theme;
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    dom['theme-icon-light'].classList.add('hidden');
+                    dom['theme-icon-dark'].classList.remove('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    dom['theme-icon-light'].classList.remove('hidden');
+                    dom['theme-icon-dark'].classList.add('hidden');
+                }
+                 Chart.defaults.color = theme === 'dark' ? '#94a3b8' : '#666';
+                 Chart.defaults.borderColor = theme === 'dark' ? '#334155' : '#e2e8f0';
+                ui.renderNavChart();
+                ui.renderAllocationChart();
             },
             openModal: (el) => { el.classList.remove('hidden'); setTimeout(() => el.classList.remove('opacity-0'), 10); },
             closeModal: (el) => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); },
@@ -744,7 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['high-water-mark'].textContent = util.formatCurrency(hwm);
                 dom['current-drawdown'].textContent = `${util.formatCurrency(drawdownDollars)} (${drawdownPercent.toFixed(2)}%)`;
                 dom['total-open-risk'].textContent = `${(totalOpenRiskR || 0).toFixed(2)}R`;
-
                 const zoneEl = dom['risk-zone'];
                 zoneEl.textContent = riskZone;
                 zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
@@ -754,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             renderTrades: () => {
                 const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
-
                 const { key, dir } = state.sort;
                 tradesWithMetrics.sort((a, b) => {
                     const metricsA = a.metrics, metricsB = b.metrics;
@@ -769,7 +754,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const comp = key.includes('Date') ? new Date(valA) - new Date(valB) : typeof valA === 'number' ? valA - valB : String(valA).localeCompare(String(valB));
                     return dir === 'asc' ? comp : -comp;
                 });
-
                 ui.updateSortIndicators();
                 dom['trades-body'].innerHTML = tradesWithMetrics.map(tradeWithMetrics => {
                     const { metrics, ...trade } = tradeWithMetrics;
@@ -777,22 +761,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const r = trade.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
                     const plClass = pl >= 0 ? 'text-green-600' : 'text-red-600';
                     const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
-                    return `
-                        <tr data-id="${trade.id}" class="hover:bg-slate-50 cursor-pointer">
-                            <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${trade.ticker}</td>
-                            <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${util.formatDate(trade.entryDate)}</td>
-                            <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${util.formatCurrency(trade.entryPrice)}</td>
-                            <td data-label="Current Price" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${trade.currentPrice ? util.formatCurrency(trade.currentPrice) : 'N/A'}</td>
-                            <td data-label="Position" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${trade.position || 'N/A'}</td>
-                            <td data-label="Initial Stop" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${trade.initialStop ? util.formatCurrency(trade.initialStop) : 'N/A'}</td>
-                            <td data-label="Initial Risk (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${metrics.initialR.toFixed(2)}R</td>
-                            <td data-label="Trailing Stop" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${trade.trailingStop ? util.formatCurrency(trade.trailingStop) : 'N/A'}</td>
+                    return `<tr data-id="${trade.id}" class="hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                            <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
+                            <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatDate(trade.entryDate)}</td>
+                            <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatCurrency(trade.entryPrice)}</td>
+                            <td data-label="Current Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.currentPrice ? util.formatCurrency(trade.currentPrice) : 'N/A'}</td>
+                            <td data-label="Position" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.position || 'N/A'}</td>
+                            <td data-label="Initial Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.initialStop ? util.formatCurrency(trade.initialStop) : 'N/A'}</td>
+                            <td data-label="Initial Risk (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${metrics.initialR.toFixed(2)}R</td>
+                            <td data-label="Trailing Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.trailingStop ? util.formatCurrency(trade.trailingStop) : 'N/A'}</td>
                             <td data-label="P/L $" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${util.formatCurrency(pl)}</td>
                             <td data-label="P/L (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${r.toFixed(2)}R</td>
                             <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${trade.status}</span></td>
                         </tr>`;
                 }).join('');
-                if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-500">No trades to display.</td></tr>`;
+                if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="11" class="text-center py-8 text-secondary">No trades to display.</td></tr>`;
             },
             updateSortIndicators: () => {
                 dom['trades-head'].querySelectorAll('th.sortable').forEach(th => {
@@ -807,14 +790,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.navChart = new Chart(ctx, {
                     type: 'line',
                     data: { datasets: [{ label: 'NAV', data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, 
-                        scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' } }, y: { ticks: { callback: v => util.formatCurrency(v) } } }, 
-                        plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } 
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' } }, y: { ticks: { callback: v => util.formatCurrency(v) } } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
                 });
             },
             renderAllocationChart: () => {
+                const canvas = dom['allocation-chart'];
+                const placeholder = dom['allocation-placeholder'];
+                if (state.allocationChart) { state.allocationChart.destroy(); }
                 const openTrades = state.trades.filter(t => t.status === 'Open');
                 const allocation = openTrades.reduce((acc, trade) => {
                     const sector = trade.sector || 'Uncategorized';
@@ -822,150 +804,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     acc[sector] = (acc[sector] || 0) + value;
                     return acc;
                 }, {});
-
+                if (state.settings.currentCash > 0) { allocation['Cash'] = state.settings.currentCash; }
                 const labels = Object.keys(allocation);
-                const data = Object.values(allocation);
-
-                const ctx = dom['allocation-chart'].getContext('2d');
-                if (state.allocationChart) {
-                    state.allocationChart.destroy();
-                }
-
-                if(labels.length === 0){
-                    dom['allocation-chart'].style.display = 'none';
-                    const placeholder = dom['allocation-chart'].parentElement.querySelector('p');
-                    if(!placeholder) {
-                        dom['allocation-chart'].parentElement.innerHTML += '<p class="text-slate-400 text-center">No open positions to display.</p>';
-                    }
+                if (labels.length === 0) {
+                    canvas.style.display = 'none';
+                    placeholder.textContent = 'No assets to display.';
+                    placeholder.style.display = 'block';
                     return;
-                } else {
-                     dom['allocation-chart'].style.display = 'block';
-                     const placeholder = dom['allocation-chart'].parentElement.querySelector('p');
-                     if(placeholder) placeholder.remove();
                 }
-
-                state.allocationChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Portfolio Allocation',
-                            data: data,
-                            backgroundColor: [
-                                '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899',
-                                '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'
-                            ],
-                            borderColor: '#ffffff',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 15,
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            label += util.formatCurrency(context.parsed);
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+                canvas.style.display = 'block';
+                placeholder.style.display = 'none';
+                const ctx = canvas.getContext('2d');
+                const data = Object.values(allocation);
+                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'], borderColor: '#ffffff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
             },
             renderNavHistory: () => {
-                if (typeof window.dateFns === 'undefined') {
-                    console.warn("date-fns library not loaded yet, skipping NAV history render.");
-                    return;
-                }
-
-                const tabsContainer = dom['nav-history-tabs'];
-                const contentContainer = dom['nav-history-content'];
-                tabsContainer.innerHTML = '';
-                contentContainer.innerHTML = '';
-
+                const container = dom['nav-history-container'];
+                container.innerHTML = '';
                 if (!state.navHistory || state.navHistory.length === 0) {
-                    contentContainer.innerHTML = '<p class="text-center py-4 text-slate-500">No NAV history to display. It records after closing trades or refreshing prices.</p>';
+                    container.innerHTML = '<p class="text-center py-4 text-secondary">No NAV history to display.</p>';
                     return;
                 }
-                
-                // Group by month
-                const groupedByMonth = state.navHistory.reduce((acc, item) => {
-                    const monthKey = window.dateFns.format(new Date(item.date), 'yyyy-MM');
-                    if (!acc[monthKey]) {
-                        acc[monthKey] = [];
-                    }
-                    acc[monthKey].push(item);
-                    return acc;
-                }, {});
-
-                const sortedMonthKeys = Object.keys(groupedByMonth).sort().reverse();
-
-                // Create tabs for each month
-                sortedMonthKeys.forEach((key, index) => {
-                    const monthDisplay = window.dateFns.format(new Date(key), 'MMM yy');
-                    const isActive = index === 0;
-                    tabsContainer.innerHTML += `<a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}" data-month="${key}">${monthDisplay}</a>`;
-                });
-
-                // Create content for each month's tab
-                sortedMonthKeys.forEach((key, index) => {
-                    const monthData = groupedByMonth[key];
-                    const isActive = index === 0;
-                    const tableRows = monthData
-                        .sort((a, b) => new Date(b.date) - new Date(a.date))
-                        .map(item => `
-                            <tr>
-                                <td class="px-6 py-4">${util.formatDate(item.date)}</td>
-                                <td class="px-6 py-4 text-sm text-slate-500">${util.formatTime(item.timestamp)}</td>
-                                <td class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
-                            </tr>
-                        `).join('');
-
-                    contentContainer.innerHTML += `
-                        <div id="nav-content-${key}" class="overflow-x-auto ${isActive ? '' : 'hidden'}">
-                            <table class="min-w-full divide-y divide-slate-200 mt-4">
-                                <thead class="bg-slate-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Last Update</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">NAV</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-200">${tableRows}</tbody>
-                            </table>
-                        </div>
-                    `;
-                });
-
-                if (tabsContainer.innerHTML) {
-                    tabsContainer.addEventListener('click', events.handleNavTabClick);
-                }
+                const table = document.createElement('table');
+                table.id = 'nav-history-table';
+                table.className = 'min-w-full divide-y divide-border-color';
+                table.innerHTML = `
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Last Update</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">NAV</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-border-color">
+                        ${state.navHistory
+                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .map(item => `
+                                <tr>
+                                    <td data-label="Date" class="px-6 py-4">${util.formatDate(item.date)}</td>
+                                    <td data-label="Last Update" class="px-6 py-4 text-sm text-secondary">${util.formatTime(item.timestamp)}</td>
+                                    <td data-label="NAV" class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
+                                </tr>
+                            `).join('')
+                        }
+                    </tbody>
+                `;
+                container.appendChild(table);
             },
             showAdvancedStats: () => {
                 const s = calc.getAdvancedStats();
                 dom['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
                     `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="bg-slate-50 p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
-                        <div class="bg-slate-50 p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
-                        <div class="bg-green-50 p-4 rounded-lg text-green-800"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
-                        <div class="bg-red-50 p-4 rounded-lg text-red-800"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
-                        <div class="bg-slate-50 p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
+                        <div class="bg-green-50 dark:bg-green-900/50 p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
+                        <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
                     </div>`;
                 ui.openModal(dom['stats-modal']);
             },
@@ -1005,6 +899,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-gen-summary'].onclick = events.handleGenSummary;
                 dom['btn-analyze-portfolio'].onclick = events.handleAnalyzePortfolio;
                 dom['btn-describe-holdings'].onclick = events.handleDescribeHoldings;
+                dom['theme-toggle'].onclick = events.handleThemeToggle;
                 
                 dom['trade-form'].onsubmit = events.handleSaveTrade;
                 dom['exit-form'].onsubmit = events.handleSaveExit;
@@ -1022,6 +917,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-copy-portfolio'].onclick = () => util.copyToClipboard(dom['portfolio-content'].innerText);
                 dom['btn-copy-holdings'].onclick = () => util.copyToClipboard(dom['holdings-content'].innerText);
                 dom['btn-copy-ai-trade'].onclick = () => util.copyToClipboard(dom['ai-trade-content'].innerText);
+            },
+            handleThemeToggle: () => {
+                const newTheme = state.settings.theme === 'light' ? 'dark' : 'light';
+                ui.applyTheme(newTheme);
             },
             handleAddTradeClick: () => {
                 const totalOpenRisk_R = state.trades.filter(t => t.status === 'Open').reduce((sum, t) => sum + calc.getCurrentRiskR(t), 0);
@@ -1043,20 +942,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['trade-form'].reset(); dom['modal-title'].textContent = 'Add New Trade'; dom['trade-id'].value = ''; 
                 ui.openModal(dom['trade-modal']);
             },
-            handleNavTabClick: (e) => {
-                e.preventDefault();
-                const clickedButton = e.target.closest('a');
-                if (!clickedButton) return;
-                
-                dom['nav-history-tabs'].querySelectorAll('a').forEach(btn => {
-                    btn.classList.remove('border-indigo-500', 'text-indigo-600');
-                    btn.classList.add('border-transparent', 'text-slate-500');
-                });
-                dom['nav-history-content'].querySelectorAll('div[id^="nav-content-"]').forEach(div => div.classList.add('hidden'));
-
-                clickedButton.classList.add('border-indigo-500', 'text-indigo-600');
-                dom[`nav-content-${clickedButton.dataset.month}`].classList.remove('hidden');
-            },
             handleSaveTrade: (e) => {
                 e.preventDefault();
                 const id = dom['trade-id'].value;
@@ -1074,6 +959,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (id) {
                     Object.assign(state.trades.find(t => t.id === id), tradeData);
                 } else {
+                     const cost = tradeData.entryPrice * tradeData.position;
+                    if (state.settings.currentCash < cost) {
+                        util.showAlert('Not enough cash to open this position.');
+                        return;
+                    }
+                    state.settings.currentCash -= cost;
                     state.trades.push({ ...tradeData, id: `trade-${Date.now()}`, status: 'Open', currentPrice: null });
                 }
                 ui.closeModal(dom['trade-modal']);
@@ -1087,8 +978,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     trade.status = 'Closed';
                     trade.exitDate = dom['exit-date'].value;
                     trade.exitPrice = parseFloat(dom['exit-price'].value);
-                    const metrics = calc.getTradeMetrics(trade);
-                    state.settings.currentCash += metrics.realizedPL;
+                    trade.exitRemarks = dom['exit-remarks'].value;
+                    const proceeds = trade.exitPrice * trade.position;
+                    state.settings.currentCash += proceeds;
                     calc.recordNavPoint();
                     ui.closeModal(dom['exit-modal']);
                     ui.render();
@@ -1229,16 +1121,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     const metrics = calc.getTradeMetrics(t);
                     const pl = t.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
                     const r = t.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
+                    let exitInfo = `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}.`;
+                    if (t.status === 'Closed') {
+                        exitInfo = `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. My exit remarks were: '${t.exitRemarks || 'None'}'. `;
+                    }
+
                     return `For ticker ${t.ticker}, the trade status is ${t.status}. Entry was on ${util.formatDate(t.entryDate)} at a price of ${util.formatCurrency(t.entryPrice)} with a position size of ${t.position}. The initial stop was ${util.formatCurrency(t.initialStop)}. ` +
                            (t.trailingStop ? `The trailing stop is currently ${util.formatCurrency(t.trailingStop)}. ` : '') +
-                           (t.status === 'Closed' ? `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. ` : `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}. `) +
+                           exitInfo +
                            `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My emotional state was ${t.emotionalState || 'not recorded'}, and my notes were: '${t.psychologyNotes || 'None'}'.`;
                 }).join(' ');
 
                 const prompt = `Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n${tradeDetails}`;
                 
                 ui.openModal(dom['holdings-modal']);
-                dom['holdings-modal'].querySelector('h2').textContent = '📄 Trade History Description';
+                if (dom['holdings-modal']) { 
+                    dom['holdings-modal'].querySelector('h2').textContent = '📄 Trade History Description';
+                }
                 dom['holdings-content'].innerHTML = await api.callGemini(prompt, 'holdings-content');
             },
             handleAnalyzeTrade: async () => {
@@ -1267,13 +1166,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const init = () => {
             cacheDom();
             events.init();
+            // Check for saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            ui.applyTheme(savedTheme);
+
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
                 state.navHistory.push({ 
                     date: d.toISOString().split('T')[0], 
                     nav: state.settings.initialCapital,
-                    timestamp: d.toISOString() // Ensure the initial record has a timestamp
+                    timestamp: d.toISOString() 
                 });
             }
             ui.render();
