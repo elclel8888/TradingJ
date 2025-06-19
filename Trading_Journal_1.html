@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.settings = { ...defaultSettings, ...data.settings };
                 state.trades = data.trades;
                 state.navHistory = data.navHistory.map(item => ({ ...item, timestamp: item.timestamp || new Date(item.date).toISOString() }));
-                ui.applyTheme(state.settings.theme);
+                ui.applyTheme(state.settings.theme || 'light');
                 ui.render();
                 util.showAlert('Data loaded successfully!');
             } catch (err) { 
@@ -838,9 +838,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </thead>
                     <tbody class="bg-white divide-y divide-border-color">
                         ${state.navHistory
-                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .slice().sort((a, b) => new Date(b.date) - new Date(a.date)) // Use slice to avoid mutating original
                             .map(item => `
-                                <tr>
+                                <tr class="dark:bg-secondary">
                                     <td data-label="Date" class="px-6 py-4">${util.formatDate(item.date)}</td>
                                     <td data-label="Last Update" class="px-6 py-4 text-sm text-secondary">${util.formatTime(item.timestamp)}</td>
                                     <td data-label="NAV" class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
@@ -920,6 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             handleThemeToggle: () => {
                 const newTheme = state.settings.theme === 'light' ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
                 ui.applyTheme(newTheme);
             },
             handleAddTradeClick: () => {
@@ -1031,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.readAsText(file);
             },
             handleLoadOnlineData: async () => {
-                const url = 'https://elclel8888.github.io/TradingJ/trading_journal_backup_2025-06-18.json';
+                const url = 'https://elclel8888.github.io/TradingJ/trading_journal_backup.json';
                 ui.setLoading(dom['btn-load-online'], true, 'Loading...');
                 try {
                     const response = await fetch(url, { cache: 'no-cache' }); 
@@ -1051,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = JSON.stringify({ settings: state.settings, trades: state.trades, navHistory: state.navHistory }, null, 2);
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
-                a.download = `trading_journal_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.download = `trading_journal_backup.json`;
                 a.click();
                 URL.revokeObjectURL(a.href);
             },
@@ -1115,24 +1116,29 @@ document.addEventListener('DOMContentLoaded', () => {
             },
              handleDescribeHoldings: async () => {
                 const allTrades = state.trades;
-                if (!allTrades.length) return util.showAlert("No trade history to describe.");
+                const currentCash = util.formatCurrency(state.settings.currentCash);
+                let historyText = `The current cash balance is ${currentCash}. `;
 
-                const tradeDetails = allTrades.map(t => {
-                    const metrics = calc.getTradeMetrics(t);
-                    const pl = t.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
-                    const r = t.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                    let exitInfo = `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}.`;
-                    if (t.status === 'Closed') {
-                        exitInfo = `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. My exit remarks were: '${t.exitRemarks || 'None'}'. `;
-                    }
+                if (!allTrades.length) {
+                    historyText += "There is no trade history to describe.";
+                } else {
+                    historyText += allTrades.map(t => {
+                        const metrics = calc.getTradeMetrics(t);
+                        const pl = t.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
+                        const r = t.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
+                        let exitInfo = `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}.`;
+                        if (t.status === 'Closed') {
+                            exitInfo = `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. My exit remarks were: '${t.exitRemarks || 'None'}'. `;
+                        }
 
-                    return `For ticker ${t.ticker}, the trade status is ${t.status}. Entry was on ${util.formatDate(t.entryDate)} at a price of ${util.formatCurrency(t.entryPrice)} with a position size of ${t.position}. The initial stop was ${util.formatCurrency(t.initialStop)}. ` +
-                           (t.trailingStop ? `The trailing stop is currently ${util.formatCurrency(t.trailingStop)}. ` : '') +
-                           exitInfo +
-                           `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My emotional state was ${t.emotionalState || 'not recorded'}, and my notes were: '${t.psychologyNotes || 'None'}'.`;
-                }).join(' ');
+                        return `For ticker ${t.ticker}, the trade status is ${t.status}. Entry was on ${util.formatDate(t.entryDate)} at a price of ${util.formatCurrency(t.entryPrice)} with a position size of ${t.position}. The initial stop was ${util.formatCurrency(t.initialStop)}. ` +
+                            (t.trailingStop ? `The trailing stop is currently ${util.formatCurrency(t.trailingStop)}. ` : '') +
+                            exitInfo +
+                            `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My emotional state was ${t.emotionalState || 'not recorded'}, and my notes were: '${t.psychologyNotes || 'None'}'.`;
+                    }).join(' ');
+                }
 
-                const prompt = `Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n${tradeDetails}`;
+                const prompt = `Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n${historyText}`;
                 
                 ui.openModal(dom['holdings-modal']);
                 if (dom['holdings-modal']) { 
@@ -1166,7 +1172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const init = () => {
             cacheDom();
             events.init();
-            // Check for saved theme
             const savedTheme = localStorage.getItem('theme') || 'light';
             ui.applyTheme(savedTheme);
 
