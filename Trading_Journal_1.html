@@ -166,7 +166,8 @@
                     <h2 class="text-xl font-bold mb-4">Configuration & Analysis</h2>
                     <div class="space-y-4">
                         <button id="btn-settings" class="btn w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
-                        <button id="btn-api-keys" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">API Key Settings</button>
+                        <button id="btn-provider-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Data Provider Settings</button>
+                        <button id="btn-gemini-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Gemini AI Settings</button>
                         <button id="btn-view-stats" class="btn w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
                         <hr class="border-border-color">
                         <button id="btn-gen-summary" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
@@ -298,20 +299,50 @@
             </form>
         </div>
     </div>
-    
-    <div id="api-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
+
+    <div id="provider-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-            <h2 class="text-2xl font-bold mb-6">API Key Settings</h2>
-            <form id="api-form">
+            <h2 class="text-2xl font-bold mb-6">Data Provider Settings</h2>
+            <form id="provider-form">
                  <div><label for="alphavantage-key" class="block text-sm font-medium">Alpha Vantage API Key</label><input type="password" id="alphavantage-key" class="mt-1 block w-full input"></div>
-                 <div class="mt-4"><label for="gemini-model" class="block text-sm font-medium">Gemini AI Model</label>
+                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="gemini-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
+        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6">Gemini AI Settings</h2>
+            <form id="gemini-form" class="space-y-4">
+                 <div>
+                    <label for="gemini-model" class="block text-sm font-medium">Gemini AI Model</label>
                     <select id="gemini-model" class="mt-1 block w-full input">
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
                         <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
                     </select>
                 </div>
-                 <div class="mt-4"><label for="gemini-keys" class="block text-sm font-medium">Gemini API Keys (comma-separated)</label><textarea id="gemini-keys" rows="8" class="mt-1 block w-full input" placeholder="key1,key2,key3"></textarea></div>
+                 <div>
+                    <label for="gemini-keys" class="block text-sm font-medium">Gemini API Keys (comma-separated)</label>
+                    <textarea id="gemini-keys" rows="3" class="mt-1 block w-full input" placeholder="key1,key2,key3"></textarea>
+                </div>
+                <hr>
+                <div>
+                    <label for="prompt-weekly-summary" class="block text-sm font-medium">Weekly Summary Prompt</label>
+                    <textarea id="prompt-weekly-summary" rows="4" class="mt-1 block w-full input"></textarea>
+                </div>
+                <div>
+                    <label for="prompt-portfolio-analysis" class="block text-sm font-medium">Portfolio Analysis Prompt</label>
+                    <textarea id="prompt-portfolio-analysis" rows="4" class="mt-1 block w-full input"></textarea>
+                </div>
+                <div>
+                    <label for="prompt-describe-holdings" class="block text-sm font-medium">Describe Holdings Prompt</label>
+                    <textarea id="prompt-describe-holdings" rows="4" class="mt-1 block w-full input"></textarea>
+                </div>
+                <div>
+                    <label for="prompt-trade-analysis" class="block text-sm font-medium">Trade Analysis Prompt</label>
+                    <textarea id="prompt-trade-analysis" rows="4" class="mt-1 block w-full input"></textarea>
+                </div>
                  <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
             </form>
         </div>
@@ -411,7 +442,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 alphaVantageKey: '',
                 currentApiKeyIndex: 0, 
                 geminiModel: 'gemini-1.5-flash-latest',
-                theme: 'light'
+                theme: 'light',
+                promptWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
+                promptPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
+                promptDescribeHoldings: 'Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n{{DATA}}',
+                promptTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.'
             },
             sort: { key: 'entryDate', dir: 'desc' }
         };
@@ -423,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'total-assets', 'current-cash', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
-                'btn-settings', 'btn-api-keys', 'btn-view-stats', 'btn-gen-summary', 'btn-analyze-portfolio',
+                'btn-settings', 'btn-gemini-settings', 'btn-provider-settings', 'btn-view-stats', 'btn-gen-summary', 'btn-analyze-portfolio',
                 'btn-describe-holdings', 'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
                 'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk',
                 'nav-history-container',
@@ -433,7 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price', 'exit-remarks',
                 'stop-modal', 'stop-form', 'stop-select', 'new-stop',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
-                'api-modal', 'api-form', 'alphavantage-key', 'gemini-model', 'gemini-keys',
+                'provider-modal', 'provider-form', 'alphavantage-key', 
+                'gemini-modal', 'gemini-form', 'gemini-model', 'gemini-keys',
+                'prompt-weekly-summary', 'prompt-portfolio-analysis', 'prompt-describe-holdings', 'prompt-trade-analysis',
                 'summary-modal', 'summary-content', 'stats-modal', 'stats-content',
                 'portfolio-modal', 'portfolio-content', 'holdings-modal', 'holdings-content', 'btn-copy-holdings',
                 'ai-trade-modal', 'ai-trade-content',
@@ -498,6 +535,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     util.showAlert('Failed to copy text.');
                 }
                 document.body.removeChild(textArea);
+            },
+            debounce: (func, delay) => {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), delay);
+                };
             }
         };
         
@@ -512,26 +557,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (dom[targetElId]) dom[targetElId].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
                 
-                const initialKeyIndex = state.settings.currentApiKeyIndex;
-
-                for (let i = 0; i < apiKeys.length; i++) {
-                    const keyIndex = (initialKeyIndex + i) % apiKeys.length;
+                const totalKeys = apiKeys.length;
+                for (let i = 0; i < totalKeys; i++) {
+                    const keyIndex = state.settings.currentApiKeyIndex;
                     const key = apiKeys[keyIndex];
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${key}`;
                     
+                    state.settings.currentApiKeyIndex = (keyIndex + 1) % totalKeys;
+
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                        
                         if (res.ok) {
                             const result = await res.json();
                             const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) { state.settings.currentApiKeyIndex = (keyIndex + 1) % apiKeys.length; return text; }
+                            if (text) {
+                                return text;
+                            }
                         }
-                        const errorData = await res.json().catch(() => ({}));
-                        console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Status ${res.status}. ${errorData?.error?.message || 'Unknown error.'}`);
-                    } catch (error) { console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Network Error - ${error.message}`); }
+                        
+                        if (res.status === 429 || res.status === 403) {
+                            console.error(`Key index ${keyIndex} (...${key.slice(-4)}) failed with status ${res.status}. Trying next key.`);
+                            await new Promise(resolve => setTimeout(resolve, 250)); 
+                            continue;
+                        } else {
+                            const errorData = await res.json().catch(() => ({}));
+                            console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Status ${res.status}. ${errorData?.error?.message || 'Unknown error.'}`);
+                        }
+
+                    } catch (error) {
+                        console.error(`Key index ${keyIndex} (...${key.slice(-4)}): Network Error - ${error.message}`);
+                    }
                 }
                 
-                const finalUserMessage = `All API keys failed. Please check your keys or the browser console for details.`;
+                const finalUserMessage = `All API keys failed. Please check your keys, permissions, and quotas, or see the browser console for details.`;
                 if (dom[targetElId]) dom[targetElId].innerHTML = `<p class="text-red-500">${finalUserMessage}</p>`;
                 util.showAlert(finalUserMessage);
                 return "All API keys failed.";
@@ -644,7 +703,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadDataIntoState = (data) => {
             try {
                 if (!data || !data.settings || !data.trades || !data.navHistory) { throw new Error("Invalid or incomplete data format"); }
-                const defaultSettings = { highWaterMark: data.settings.initialCapital, riskPerTradePercentage: 1.0, moderateDrawdownThreshold: 5, highRiskDrawdownThreshold: 10, theme: 'light' };
+                const defaultSettings = { 
+                    highWaterMark: data.settings.initialCapital, 
+                    riskPerTradePercentage: 1.0, 
+                    moderateDrawdownThreshold: 5, 
+                    highRiskDrawdownThreshold: 10, 
+                    theme: 'light',
+                    promptWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
+                    promptPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
+                    promptDescribeHoldings: 'Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n{{DATA}}',
+                    promptTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.'
+                };
                 state.settings = { ...defaultSettings, ...data.settings };
                 state.trades = data.trades;
                 state.navHistory = data.navHistory.map(item => ({ ...item, timestamp: item.timestamp || new Date(item.date).toISOString() }));
@@ -884,11 +953,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     dom['set-high-risk-dd'].value = state.settings.highRiskDrawdownThreshold;
                     ui.openModal(dom['settings-modal']);
                 };
-                dom['btn-api-keys'].onclick = () => { 
-                    dom['alphavantage-key'].value = state.settings.alphaVantageKey; 
+                dom['btn-gemini-settings'].onclick = () => { 
                     dom['gemini-model'].value = state.settings.geminiModel; 
                     dom['gemini-keys'].value = state.settings.apiKeys.join(', ');
-                    ui.openModal(dom['api-modal']); 
+                    dom['prompt-weekly-summary'].value = state.settings.promptWeeklySummary;
+                    dom['prompt-portfolio-analysis'].value = state.settings.promptPortfolioAnalysis;
+                    dom['prompt-describe-holdings'].value = state.settings.promptDescribeHoldings;
+                    dom['prompt-trade-analysis'].value = state.settings.promptTradeAnalysis;
+                    ui.openModal(dom['gemini-modal']); 
+                };
+                dom['btn-provider-settings'].onclick = () => { 
+                    dom['alphavantage-key'].value = state.settings.alphaVantageKey; 
+                    ui.openModal(dom['provider-modal']); 
                 };
                 dom['btn-import'].onclick = () => dom['file-input'].click();
                 dom['file-input'].onchange = events.handleImport;
@@ -905,12 +981,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['exit-form'].onsubmit = events.handleSaveExit;
                 dom['stop-form'].onsubmit = events.handleSaveStop;
                 dom['settings-form'].onsubmit = events.handleSaveSettings;
-                dom['api-form'].onsubmit = events.handleSaveApiKeys;
+                dom['gemini-form'].onsubmit = events.handleSaveGeminiKeys;
+                dom['provider-form'].onsubmit = events.handleSaveProviderKeys;
+
 
                 dom['trades-head'].onclick = events.handleSort;
                 dom['trades-body'].onclick = events.handleEditTrade;
+                
+                const debouncedFindSectorLogic = util.debounce(events.handleFindSectorLogic, 500);
+                dom['btn-find-sector'].onclick = () => {
+                    const ticker = dom.ticker.value;
+                    if (!ticker) return util.showAlert('Enter a ticker first.');
+                    ui.setLoading(dom['btn-find-sector'], true, '');
+                    debouncedFindSectorLogic(ticker);
+                };
 
-                dom['btn-find-sector'].onclick = events.handleFindSector;
                 dom['btn-analyze-trade'].onclick = events.handleAnalyzeTrade;
                 dom.modalCancelButtons.forEach(btn => btn.onclick = () => ui.closeModal(btn.closest('.modal-overlay')));
                 dom['btn-copy-summary'].onclick = () => util.copyToClipboard(dom['summary-content'].innerText);
@@ -1008,14 +1093,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.closeModal(dom['settings-modal']); 
                 ui.render(); 
             },
-            handleSaveApiKeys: (e) => { 
+            handleSaveGeminiKeys: (e) => { 
                 e.preventDefault(); 
-                state.settings.alphaVantageKey = dom['alphavantage-key'].value.trim(); 
                 state.settings.geminiModel = dom['gemini-model'].value; 
                 state.settings.apiKeys = dom['gemini-keys'].value.split(',').map(k => k.trim()).filter(Boolean);
+                state.settings.promptWeeklySummary = dom['prompt-weekly-summary'].value;
+                state.settings.promptPortfolioAnalysis = dom['prompt-portfolio-analysis'].value;
+                state.settings.promptDescribeHoldings = dom['prompt-describe-holdings'].value;
+                state.settings.promptTradeAnalysis = dom['prompt-trade-analysis'].value;
                 state.settings.currentApiKeyIndex = 0; 
-                ui.closeModal(dom['api-modal']); 
-                util.showAlert(`API keys saved.`); 
+                ui.closeModal(dom['gemini-modal']); 
+                util.showAlert(`Gemini AI settings saved.`); 
+            },
+            handleSaveProviderKeys: (e) => {
+                e.preventDefault();
+                state.settings.alphaVantageKey = dom['alphavantage-key'].value.trim();
+                ui.closeModal(dom['provider-modal']);
+                util.showAlert(`Data provider settings saved.`);
             },
             handleImport: (e) => {
                 const file = e.target.files[0];
@@ -1095,8 +1189,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const totalPL = stats.reduce((sum, s) => sum + s.realizedPL, 0);
                 const totalR = stats.reduce((sum, s) => sum + s.realizedR, 0);
                 const winRate = (recentTrades.filter(t => calc.getTradeMetrics(t).realizedPL > 0).length / recentTrades.length) * 100;
+
+                const dataString = `- Total Trades: ${recentTrades.length}\n- Total P/L: ${util.formatCurrency(totalPL)}\n- Total R-Multiple: ${totalR.toFixed(2)}R\n- Win Rate: ${winRate.toFixed(1)}%`;
                 
-                const prompt = `Generate a weekly trading performance summary based on this data:\n- Total Trades: ${recentTrades.length}\n- Total P/L: ${util.formatCurrency(totalPL)}\n- Total R-Multiple: ${totalR.toFixed(2)}R\n- Win Rate: ${winRate.toFixed(1)}%\n\nProvide brief, insightful commentary on the performance.`;
+                const promptTemplate = state.settings.promptWeeklySummary;
+                const prompt = promptTemplate.replace('{{DATA}}', dataString);
+                
                 ui.openModal(dom['summary-modal']);
                 dom['summary-content'].innerHTML = await api.callGemini(prompt, 'summary-content');
             },
@@ -1107,9 +1205,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const totalUnrealizedPL = openTrades.reduce((sum, t) => sum + calc.getTradeMetrics(t).unrealizedPL, 0);
                 const tradeDetails = openTrades.map(t => {
                     const m = calc.getTradeMetrics(t);
-                    return `- ${t.ticker}: P/L ${util.formatCurrency(m.unrealizedPL)} (${m.unrealizedR.toFixed(2)}R). Remarks: "${t.remarks || 'None'}".`;
+                    return `- ${t.ticker}: P/L ${util.formatCurrency(m.unrealizedPL)} (${m.unrealizedR.toFixed(2)}R). Psychology Notes: "${t.psychologyNotes || 'None'}".`;
                 }).join('\n');
-                const prompt = `Analyze this open portfolio:\n\n**Overview:**\n- Positions: ${openTrades.length}\n- Total Unrealized P/L: ${util.formatCurrency(totalUnrealizedPL)}\n\n**Positions:**\n${tradeDetails}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.`;
+                const dataString = `- Positions: ${openTrades.length}\n- Total Unrealized P/L: ${util.formatCurrency(totalUnrealizedPL)}\n\n**Positions:**\n${tradeDetails}`;
+                
+                const promptTemplate = state.settings.promptPortfolioAnalysis;
+                const prompt = promptTemplate.replace('{{DATA}}', dataString);
 
                 ui.openModal(dom['portfolio-modal']);
                 dom['portfolio-content'].innerHTML = await api.callGemini(prompt, 'portfolio-content');
@@ -1138,7 +1239,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }).join(' ');
                 }
 
-                const prompt = `Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n${historyText}`;
+                const promptTemplate = state.settings.promptDescribeHoldings;
+                const prompt = promptTemplate.replace('{{DATA}}', historyText);
                 
                 ui.openModal(dom['holdings-modal']);
                 if (dom['holdings-modal']) { 
@@ -1147,24 +1249,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['holdings-content'].innerHTML = await api.callGemini(prompt, 'holdings-content');
             },
             handleAnalyzeTrade: async () => {
-                const [ticker, entry, stop, remarks] = [dom.ticker.value, dom['entry-price'].value, dom['initial-stop'].value, dom.remarks.value];
+                const [ticker, entry, stop, notes] = [dom.ticker.value, dom['entry-price'].value, dom['initial-stop'].value, dom['psychology-notes'].value];
                 if (!ticker || !entry || !stop) return util.showAlert("Ticker, Entry, and Stop are required for analysis.");
                 
-                const prompt = `Analyze this trade setup:\n- Ticker: ${ticker}\n- Entry: ${entry}\n- Stop: ${stop}\n- Remarks: "${remarks}"\n\nWhat is a potential rationale and what are the risks? Be concise.`;
+                let prompt = state.settings.promptTradeAnalysis;
+                prompt = prompt.replace('{{TICKER}}', ticker)
+                               .replace('{{ENTRY}}', entry)
+                               .replace('{{STOP}}', stop)
+                               .replace('{{NOTES}}', notes);
+
                 ui.openModal(dom['ai-trade-modal']);
                 dom['ai-trade-content'].innerHTML = await api.callGemini(prompt, 'ai-trade-content');
             },
-            handleFindSector: async () => {
-                const ticker = dom.ticker.value;
-                if (!ticker) return util.showAlert('Enter a ticker first.');
-                ui.setLoading(dom['btn-find-sector'], true, '');
+            handleFindSectorLogic: async (ticker) => {
                 const prompt = `GICS sector for ticker ${ticker}? Respond with only the sector name.`;
                 const result = await api.callGemini(prompt, 'sector-content');
-                const sector = result.trim().replace(/\.$/, '');
-                dom.sector.value = sector;
-                dom['sector-content'].textContent = sector;
-                ui.openModal(dom['sector-modal']);
+
+                if (result && !result.toLowerCase().includes('failed')) {
+                    const sector = result.trim().replace(/\.$/, '');
+                    dom.sector.value = sector;
+                    dom['sector-content'].textContent = sector;
+                    ui.openModal(dom['sector-modal']);
+                } else {
+                    util.showAlert('Could not find sector. AI analysis failed.');
+                }
                 ui.setLoading(dom['btn-find-sector'], false);
+            },
+             handleFindSector: () => {
+                const ticker = dom.ticker.value;
+                if (!ticker) return util.showAlert('Enter a ticker first.');
+                
+                const debouncedFindSectorLogic = util.debounce(async () => {
+                    ui.setLoading(dom['btn-find-sector'], true, '');
+                    await events.handleFindSectorLogic(ticker);
+                }, 500);
+
+                debouncedFindSectorLogic();
             }
         };
 
