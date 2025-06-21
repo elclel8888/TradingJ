@@ -11,19 +11,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f1f5f9;
-            --bg-secondary: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --border-color: #e2e8f0;
+            --bg-primary: #f8fafc; /* slate-50 */
+            --bg-secondary: #ffffff; /* white */
+            --text-primary: #1e293b; /* slate-800 */
+            --text-secondary: #64748b; /* slate-500 */
+            --border-color: #e2e8f0; /* slate-200 */
+            --accent-color: #4338ca; /* indigo-700 */
         }
 
         .dark {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
+            --bg-primary: #020617; /* slate-950 */
+            --bg-secondary: #0f172a; /* slate-900 */
+            --text-primary: #f8fafc; /* slate-50 */
+            --text-secondary: #94a3b8; /* slate-400 */
+            --border-color: #1e293b; /* slate-800 */
+            --accent-color: #6366f1; /* indigo-500 */
         }
         body { 
             font-family: 'Inter', sans-serif; 
@@ -31,14 +33,14 @@
             color: var(--text-primary);
             transition: background-color 0.3s, color 0.3s;
         }
-        .modal-content, .stat-card, header, section {
+        .themed-bg, .stat-card, .modal-content {
              background-color: var(--bg-secondary);
-             transition: background-color 0.3s;
+             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
              border-color: var(--border-color);
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; border-left-color: var(--accent-color); }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
         .btn { transition: all 0.2s ease-in-out; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
@@ -53,11 +55,21 @@
         .gradient-text { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .alert-modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         .alert-modal-overlay.visible { opacity: 1; pointer-events: auto; }
-        .alert-modal-content { background-color: var(--bg-secondary); padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
+        .alert-modal-content { padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
         .alert-modal-overlay.visible .alert-modal-content { transform: scale(1); }
         .tab-active { background-color: #4f46e5; color: #ffffff; }
         .tab-inactive { background-color: #374151; color: #d1d5db; }
         
+        #trades-table thead, #nav-history-table thead {
+            background-color: var(--bg-primary);
+        }
+        #trades-table tbody tr, #nav-history-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+        #trades-table tbody tr:last-child, #nav-history-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
         /* Responsive Table */
         @media (max-width: 1023px) {
             #trades-table thead, #nav-history-table thead, #cloud-api-table thead { display: none; }
@@ -69,18 +81,18 @@
             #trades-table tbody td:last-child, #nav-history-table tbody td:last-child, #cloud-api-table tbody td:last-child { border-bottom: none; }
             #trades-table tbody td::before, #nav-history-table tbody td::before, #cloud-api-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: var(--text-secondary); }
         }
-        .dark .bg-slate-50 { background-color: #334155; }
-        .dark .text-slate-500 { color: #94a3b8; }
-        .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #475569; }
-        .dark .input { background-color: #334155; border-color: #475569; color: #e2e8f0; }
-        .dark .btn-cancel { background-color: #475569; color: #e2e8f0; }
+        
         .dark .tab-inactive { background-color: #4b5563; }
+        .dark .input { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
+        .dark .input::placeholder { color: #64748b; }
+        .dark .btn-cancel { background-color: #334155; color: #e2e8f0; }
+        .dark .btn-cancel:hover { background-color: #475569; }
     </style>
 </head>
 <body class="text-slate-800">
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-        <header class="mb-8 p-6 bg-white rounded-xl shadow-md relative">
+        <header class="mb-8 p-6 themed-bg rounded-xl shadow-md relative">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">Trading Journal</h1>
             <p class="mt-2 text-secondary">Track your trades, analyze your performance, and refine your strategy.</p>
             <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
@@ -93,18 +105,18 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Stat Cards Grid -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-blue-500 sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-2xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-slate-500"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-purple-500"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-orange-500"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-xl font-semibold mt-1">0%</p></div>
-                    <div class="stat-card bg-white p-4 rounded-lg shadow border-green-500"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-2xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-xl font-semibold mt-1">0.00R</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-xl font-semibold mt-1">0.00R</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-xl font-semibold mt-1">0%</p></div>
+                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
                 </section>
 
                 <!-- NAV Chart -->
-                <section class="bg-white p-4 md:p-6 rounded-lg shadow h-64 sm:h-80 lg:h-96">
+                <section class="themed-bg p-4 md:p-6 rounded-lg shadow h-64 sm:h-80 lg:h-96">
                     <h2 class="text-xl font-bold mb-4">Net Asset Value (NAV)</h2>
                     <canvas id="nav-chart"></canvas>
                 </section>
@@ -113,7 +125,7 @@
             <!-- Side Column -->
             <aside class="space-y-8">
                  <!-- Portfolio Allocation Chart -->
-                 <section id="portfolio-allocation-section" class="bg-white p-6 rounded-lg shadow">
+                 <section id="portfolio-allocation-section" class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Portfolio Allocation</h2>
                     <div id="allocation-chart-container" class="h-64 flex items-center justify-center">
                         <canvas id="allocation-chart"></canvas>
@@ -121,7 +133,7 @@
                     </div>
                 </section>
                  <!-- Risk Exposure Dashboard -->
-                <section id="risk-exposure-dashboard" class="bg-white p-6 rounded-lg shadow">
+                <section id="risk-exposure-dashboard" class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Risk Exposure</h2>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between">
@@ -136,14 +148,14 @@
                             <span class="font-medium text-secondary">Total Open Risk</span>
                             <span id="total-open-risk" class="font-semibold">0.00R</span>
                         </div>
-                        <div class="flex justify-between items-center mt-2 pt-3 border-t">
+                        <div class="flex justify-between items-center mt-2 pt-3 border-t" style="border-color: var(--border-color);">
                             <span class="font-medium text-secondary">Risk Zone</span>
                             <span id="risk-zone" class="px-3 py-1 text-sm font-bold rounded-full"></span>
                         </div>
                     </div>
                 </section>
 
-                <section class="bg-white p-6 rounded-lg shadow">
+                <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Data Management</h2>
                     <div class="space-y-4">
                         <button id="btn-import" class="btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-md">Import Local Data</button>
@@ -153,7 +165,7 @@
                     </div>
                 </section>
                 
-                <section class="bg-white p-6 rounded-lg shadow">
+                <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Actions</h2>
                     <div class="space-y-4">
                         <button id="btn-add-trade" class="btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-md">Add New Trade</button>
@@ -166,7 +178,7 @@
                     </div>
                 </section>
                 
-                <section class="bg-white p-6 rounded-lg shadow">
+                <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Configuration & Analysis</h2>
                     <div class="space-y-4">
                         <button id="btn-settings" class="btn w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
@@ -174,7 +186,7 @@
                         <button id="btn-cloud-api-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud API Settings</button>
                         <button id="btn-cloud-ai-prompt" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud AI Prompts</button>
                         <button id="btn-view-stats" class="btn w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
-                        <hr class="border-border-color">
+                        <hr style="border-color: var(--border-color);">
                         <button id="btn-gen-summary" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
                         <button id="btn-analyze-portfolio" class="btn w-full bg-gradient-to-r from-sky-500 to-sky-600 text-white py-2 px-4 rounded-md">📈 Analyze Current Portfolio</button>
                         <button id="btn-describe-holdings" class="btn w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2 px-4 rounded-md">📄 Describe Trade History</button>
@@ -183,11 +195,11 @@
             </aside>
         </div>
 
-        <section class="mt-8 bg-white p-4 md:p-6 rounded-lg shadow">
+        <section class="mt-8 themed-bg p-4 md:p-6 rounded-lg shadow">
              <h2 class="text-xl font-bold mb-4">Trade History</h2>
              <div class="overflow-x-auto">
                 <table id="trades-table" class="min-w-full">
-                    <thead id="trades-head" class="bg-slate-50">
+                    <thead id="trades-head">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="ticker">Ticker</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryDate">Entry Date</th>
@@ -202,12 +214,12 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="status">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="trades-body" class="bg-white divide-y divide-border-color"></tbody>
+                    <tbody id="trades-body"></tbody>
                 </table>
              </div>
         </section>
 
-        <section class="mt-8 bg-white p-4 md:p-6 rounded-lg shadow">
+        <section class="mt-8 themed-bg p-4 md:p-6 rounded-lg shadow">
             <h2 class="text-xl font-bold mb-4">NAV History</h2>
             <div id="nav-history-container" class="overflow-x-auto"></div>
         </section>
@@ -215,25 +227,25 @@
 
     <!-- Modals -->
     <div id="trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-bold mb-6">Add New Trade</h2>
             <form id="trade-form">
                 <input type="hidden" id="trade-id">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label for="ticker" class="block text-sm font-medium">Ticker</label><input type="text" id="ticker" required class="mt-1 block w-full input"></div>
-                    <div><label for="entry-date" class="block text-sm font-medium">Entry Date</label><input type="date" id="entry-date" required class="mt-1 block w-full input"></div>
-                    <div><label for="entry-price" class="block text-sm font-medium">Entry Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
-                    <div><label for="position" class="block text-sm font-medium">Position</label><input type="number" step="any" id="position" required class="mt-1 block w-full input"></div>
-                    <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
-                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
-                    <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
+                    <div><label for="ticker" class="block text-sm font-medium text-secondary">Ticker</label><input type="text" id="ticker" required class="mt-1 block w-full input"></div>
+                    <div><label for="entry-date" class="block text-sm font-medium text-secondary">Entry Date</label><input type="date" id="entry-date" required class="mt-1 block w-full input"></div>
+                    <div><label for="entry-price" class="block text-sm font-medium text-secondary">Entry Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
+                    <div><label for="position" class="block text-sm font-medium text-secondary">Position</label><input type="number" step="any" id="position" required class="mt-1 block w-full input"></div>
+                    <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium text-secondary">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
+                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
+                    <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium text-secondary">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
                 </div>
                 
-                <hr class="my-6 border-border-color">
+                <hr class="my-6" style="border-color: var(--border-color);">
                 <h3 class="text-lg font-semibold mb-4">Trade Psychology</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
-                        <label for="emotional-state" class="block text-sm font-medium">Emotional State</label>
+                        <label for="emotional-state" class="block text-sm font-medium text-secondary">Emotional State</label>
                         <select id="emotional-state" class="mt-1 block w-full input">
                             <option>Neutral</option>
                             <option>Confident</option>
@@ -246,91 +258,91 @@
                     </div>
                 </div>
                  <div class="mt-4">
-                    <label for="psychology-notes" class="block text-sm font-medium">Psychology Notes</label>
+                    <label for="psychology-notes" class="block text-sm font-medium text-secondary">Psychology Notes</label>
                     <textarea id="psychology-notes" rows="3" class="mt-1 block w-full input"></textarea>
                 </div>
                 
                 <div class="mt-6 flex justify-between items-center">
                     <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 py-2 px-4 rounded-md">✨ Analyze</button>
-                    <div><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                    <div><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
                 </div>
             </form>
         </div>
     </div>
     
     <div id="exit-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-6">Exit Trade</h2>
             <form id="exit-form">
                  <div class="space-y-4">
-                    <div><label for="exit-select" class="block text-sm font-medium">Select Open Trade</label><select id="exit-select" required class="mt-1 block w-full input"></select></div>
-                    <div><label for="exit-date" class="block text-sm font-medium">Exit Date</label><input type="date" id="exit-date" required class="mt-1 block w-full input"></div>
-                    <div><label for="exit-price" class="block text-sm font-medium">Exit Price</label><input type="number" step="any" id="exit-price" required class="mt-1 block w-full input"></div>
-                    <div><label for="exit-remarks" class="block text-sm font-medium">Exit Remarks</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
+                    <div><label for="exit-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="exit-select" required class="mt-1 block w-full input"></select></div>
+                    <div><label for="exit-date" class="block text-sm font-medium text-secondary">Exit Date</label><input type="date" id="exit-date" required class="mt-1 block w-full input"></div>
+                    <div><label for="exit-price" class="block text-sm font-medium text-secondary">Exit Price</label><input type="number" step="any" id="exit-price" required class="mt-1 block w-full input"></div>
+                    <div><label for="exit-remarks" class="block text-sm font-medium text-secondary">Exit Remarks</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-red-600 text-white py-2 px-4 rounded-md">Save Exit</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-red-600 text-white py-2 px-4 rounded-md">Save Exit</button></div>
             </form>
         </div>
     </div>
     
      <div id="stop-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-6">Update Trailing Stop</h2>
             <form id="stop-form">
                  <div class="space-y-4">
-                    <div><label for="stop-select" class="block text-sm font-medium">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
-                    <div><label for="new-stop" class="block text-sm font-medium">New Trailing Stop</label><input type="number" step="any" id="new-stop" required class="mt-1 block w-full input"></div>
+                    <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
+                    <div><label for="new-stop" class="block text-sm font-medium text-secondary">New Trailing Stop</label><input type="number" step="any" id="new-stop" required class="mt-1 block w-full input"></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-yellow-500 text-white py-2 px-4 rounded-md">Update Stop</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-yellow-500 text-white py-2 px-4 rounded-md">Update Stop</button></div>
             </form>
         </div>
     </div>
 
     <div id="settings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-6">Account & Risk Settings</h2>
             <form id="settings-form">
                  <div class="space-y-4">
-                    <h3 class="text-lg font-semibold border-b pb-2">Account</h3>
-                    <div><label for="set-capital" class="block text-sm font-medium">Initial Capital</label><input type="number" id="set-capital" step="any" class="mt-1 block w-full input"></div>
-                    <div><label for="set-cash" class="block text-sm font-medium">Current Cash</label><input type="number" id="set-cash" step="any" class="mt-1 block w-full input"></div>
+                    <h3 class="text-lg font-semibold border-b pb-2" style="border-color: var(--border-color);">Account</h3>
+                    <div><label for="set-capital" class="block text-sm font-medium text-secondary">Initial Capital</label><input type="number" id="set-capital" step="any" class="mt-1 block w-full input"></div>
+                    <div><label for="set-cash" class="block text-sm font-medium text-secondary">Current Cash</label><input type="number" id="set-cash" step="any" class="mt-1 block w-full input"></div>
                     
-                    <h3 class="text-lg font-semibold border-b pb-2 pt-4">Risk Management</h3>
-                    <div><label for="set-risk-percent" class="block text-sm font-medium">Risk Per Trade (% of Capital)</label><input type="number" id="set-risk-percent" step="0.1" class="mt-1 block w-full input"></div>
-                    <div><label for="set-moderate-dd" class="block text-sm font-medium">Moderate Drawdown Threshold (%)</label><input type="number" id="set-moderate-dd" step="0.1" class="mt-1 block w-full input"></div>
-                    <div><label for="set-high-risk-dd" class="block text-sm font-medium">High-Risk Drawdown Threshold (%)</label><input type="number" id="set-high-risk-dd" step="0.1" class="mt-1 block w-full input"></div>
+                    <h3 class="text-lg font-semibold border-b pb-2 pt-4" style="border-color: var(--border-color);">Risk Management</h3>
+                    <div><label for="set-risk-percent" class="block text-sm font-medium text-secondary">Risk Per Trade (% of Capital)</label><input type="number" id="set-risk-percent" step="0.1" class="mt-1 block w-full input"></div>
+                    <div><label for="set-moderate-dd" class="block text-sm font-medium text-secondary">Moderate Drawdown Threshold (%)</label><input type="number" id="set-moderate-dd" step="0.1" class="mt-1 block w-full input"></div>
+                    <div><label for="set-high-risk-dd" class="block text-sm font-medium text-secondary">High-Risk Drawdown Threshold (%)</label><input type="number" id="set-high-risk-dd" step="0.1" class="mt-1 block w-full input"></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
             </form>
         </div>
     </div>
 
     <div id="provider-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg">
             <h2 class="text-2xl font-bold mb-6">Data Provider Settings</h2>
             <form id="provider-form">
-                 <div><label for="alphavantage-key" class="block text-sm font-medium">Alpha Vantage API Key</label><input type="password" id="alphavantage-key" class="mt-1 block w-full input"></div>
-                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                 <div><label for="alphavantage-key" class="block text-sm font-medium text-secondary">Alpha Vantage API Key</label><input type="password" id="alphavantage-key" class="mt-1 block w-full input"></div>
+                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
             </form>
         </div>
     </div>
     
     <div id="cloud-api-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-6">Cloud API Settings</h2>
             
-            <form id="cloud-api-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6 p-4 border rounded-lg">
+            <form id="cloud-api-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6 p-4 border rounded-lg" style="border-color: var(--border-color);">
                 <input type="hidden" id="cloud-api-id">
-                <div><label for="cloud-api-name" class="block text-sm font-medium">Name</label><input type="text" id="cloud-api-name" class="mt-1 block w-full input" required></div>
-                <div><label for="cloud-api-key" class="block text-sm font-medium">API Key</label><input type="password" id="cloud-api-key" class="mt-1 block w-full input" required></div>
-                <div><label for="cloud-api-base-url" class="block text-sm font-medium">Base URL</label><input type="text" id="cloud-api-base-url" class="mt-1 block w-full input" required></div>
-                <div><label for="cloud-api-model" class="block text-sm font-medium">Model</label><input type="text" id="cloud-api-model" class="mt-1 block w-full input" required></div>
+                <div><label for="cloud-api-name" class="block text-sm font-medium text-secondary">Name</label><input type="text" id="cloud-api-name" class="mt-1 block w-full input" required></div>
+                <div><label for="cloud-api-key" class="block text-sm font-medium text-secondary">API Key</label><input type="password" id="cloud-api-key" class="mt-1 block w-full input" required></div>
+                <div><label for="cloud-api-base-url" class="block text-sm font-medium text-secondary">Base URL</label><input type="text" id="cloud-api-base-url" class="mt-1 block w-full input" required></div>
+                <div><label for="cloud-api-model" class="block text-sm font-medium text-secondary">Model</label><input type="text" id="cloud-api-model" class="mt-1 block w-full input" required></div>
                 <div class="md:col-span-4 flex justify-end mt-2"><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Add/Update API</button></div>
             </form>
 
             <div id="cloud-api-list-container" class="overflow-x-auto">
                  <table id="cloud-api-table" class="min-w-full">
-                    <thead class="bg-slate-50">
+                    <thead id="cloud-api-table-head">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Base URL</th>
@@ -338,49 +350,49 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="cloud-api-body" class="bg-white divide-y divide-border-color"></tbody>
+                    <tbody id="cloud-api-body"></tbody>
                 </table>
             </div>
 
             <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Close</button>
+                <button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button>
             </div>
         </div>
     </div>
 
      <div id="cloud-prompt-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-6">Cloud AI Prompt Settings</h2>
-             <div id="cloud-prompt-tabs" class="flex border-b border-gray-200 dark:border-gray-700">
-                <button data-tab="weekly-summary" class="tab-button tab-active px-4 py-2 text-sm font-medium focus:outline-none">Weekly Summary</button>
-                <button data-tab="describe-holdings" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Describe Holdings</button>
-                <button data-tab="portfolio-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Portfolio Analysis</button>
-                <button data-tab="trade-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Trade Analysis</button>
-                <button data-tab="find-sector" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Find Sector</button>
+             <div id="cloud-prompt-tabs" class="flex border-b" style="border-color: var(--border-color);">
+                <button data-tab="weekly-summary" class="tab-button tab-active px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Weekly Summary</button>
+                <button data-tab="describe-holdings" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Describe Holdings</button>
+                <button data-tab="portfolio-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Portfolio Analysis</button>
+                <button data-tab="trade-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Trade Analysis</button>
+                <button data-tab="find-sector" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Find Sector</button>
              </div>
             <form id="cloud-prompt-form" class="space-y-4 mt-4">
                 <div data-tab-panel="weekly-summary">
-                    <label for="prompt-cloud-weekly-summary" class="block text-sm font-medium">Weekly Summary Prompt</label>
+                    <label for="prompt-cloud-weekly-summary" class="block text-sm font-medium text-secondary">Weekly Summary Prompt</label>
                     <textarea id="prompt-cloud-weekly-summary" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                  <div data-tab-panel="describe-holdings" class="hidden">
-                    <label for="prompt-cloud-describe-holdings" class="block text-sm font-medium">Describe Holdings Prompt</label>
+                    <label for="prompt-cloud-describe-holdings" class="block text-sm font-medium text-secondary">Describe Holdings Prompt</label>
                     <textarea id="prompt-cloud-describe-holdings" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                 <div data-tab-panel="portfolio-analysis" class="hidden">
-                    <label for="prompt-cloud-portfolio-analysis" class="block text-sm font-medium">Portfolio Analysis Prompt</label>
+                    <label for="prompt-cloud-portfolio-analysis" class="block text-sm font-medium text-secondary">Portfolio Analysis Prompt</label>
                     <textarea id="prompt-cloud-portfolio-analysis" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                  <div data-tab-panel="trade-analysis" class="hidden">
-                    <label for="prompt-cloud-trade-analysis" class="block text-sm font-medium">Trade Analysis Prompt</label>
+                    <label for="prompt-cloud-trade-analysis" class="block text-sm font-medium text-secondary">Trade Analysis Prompt</label>
                     <textarea id="prompt-cloud-trade-analysis" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                  <div data-tab-panel="find-sector" class="hidden">
-                    <label for="prompt-cloud-find-sector" class="block text-sm font-medium">Find Sector Prompt</label>
+                    <label for="prompt-cloud-find-sector" class="block text-sm font-medium text-secondary">Find Sector Prompt</label>
                     <textarea id="prompt-cloud-find-sector" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                  <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button>
+                    <button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button>
                     <button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button>
                 </div>
             </form>
@@ -389,9 +401,9 @@
 
 
     <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ Weekly Performance Summary</h2>
-            <div id="summary-content" class="prose max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="summary-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-summary" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn ml-2 bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -400,17 +412,17 @@
     </div>
     
     <div id="stats-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">Advanced Statistics</h2>
-            <div id="stats-content" class="prose max-w-none text-secondary space-y-4"></div>
-            <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button></div>
+            <div id="stats-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4"></div>
+            <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
         </div>
     </div>
 
     <div id="portfolio-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📈 Current Portfolio Analysis</h2>
-            <div id="portfolio-content" class="prose max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="portfolio-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-portfolio" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -419,9 +431,9 @@
     </div>
     
     <div id="holdings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📄 Trade History Description</h2>
-            <div id="holdings-content" class="prose max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="holdings-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-between items-center">
                 <button type="button" id="btn-copy-holdings" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -430,9 +442,9 @@
     </div>
 
     <div id="ai-trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ AI Trade Analysis</h2>
-            <div id="ai-trade-content" class="prose max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="ai-trade-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end space-x-3">
                  <button type="button" id="btn-copy-ai-trade" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
@@ -441,10 +453,10 @@
     </div>
 
     <div id="sector-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+        <div class="modal-content p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h2 class="text-xl font-bold mb-4">Sector Identified</h2>
-            <div id="sector-content" class="text-slate-700 text-lg font-semibold text-center"></div>
-            <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button></div>
+            <div id="sector-content" class="text-lg font-semibold text-center"></div>
+            <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
         </div>
     </div>
     
@@ -455,7 +467,7 @@
                 <button id="btn-alert-ok" class="btn bg-indigo-600 text-white py-2 px-6 rounded-md">OK</button>
             </div>
             <div id="alert-confirm" class="hidden justify-center gap-4">
-                <button id="btn-confirm-cancel" class="btn bg-slate-200 py-2 px-6 rounded-md">Cancel</button>
+                <button id="btn-confirm-cancel" class="btn-cancel py-2 px-6 rounded-md">Cancel</button>
                 <button id="btn-confirm-ok" class="btn bg-red-600 text-white py-2 px-6 rounded-md">Proceed</button>
             </div>
         </div>
@@ -965,20 +977,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const table = document.createElement('table');
                 table.id = 'nav-history-table';
-                table.className = 'min-w-full divide-y divide-border-color';
+                table.className = 'min-w-full';
                 table.innerHTML = `
-                    <thead class="bg-slate-50">
+                    <thead id="nav-history-table-head">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Last Update</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">NAV</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-border-color">
+                    <tbody id="nav-history-body">
                         ${state.navHistory
                             .slice().sort((a, b) => new Date(b.date) - new Date(a.date)) // Use slice to avoid mutating original
                             .map(item => `
-                                <tr class="dark:bg-secondary">
+                                <tr>
                                     <td data-label="Date" class="px-6 py-4">${util.formatDate(item.date)}</td>
                                     <td data-label="Last Update" class="px-6 py-4 text-sm text-secondary">${util.formatTime(item.timestamp)}</td>
                                     <td data-label="NAV" class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
@@ -1009,11 +1021,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const s = calc.getAdvancedStats();
                 dom['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
                     `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
-                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
-                        <div class="bg-green-50 dark:bg-green-900/50 p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
-                        <div class="bg-red-50 dark:bg-red-900/50 p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
-                        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
+                        <div class="themed-bg p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
                     </div>`;
                 ui.openModal(dom['stats-modal']);
             },
