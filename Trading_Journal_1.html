@@ -171,7 +171,6 @@
                     <div class="space-y-4">
                         <button id="btn-settings" class="btn w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
                         <button id="btn-provider-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Data Provider Settings</button>
-                        <button id="btn-gemini-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Google AI Settings (for Find Sector)</button>
                         <button id="btn-cloud-api-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud API Settings</button>
                         <button id="btn-cloud-ai-prompt" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud AI Prompts</button>
                         <button id="btn-view-stats" class="btn w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
@@ -316,27 +315,6 @@
         </div>
     </div>
     
-    <div id="gemini-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
-        <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 class="text-2xl font-bold mb-6">Google AI Settings (for Find Sector)</h2>
-            <form id="gemini-form" class="space-y-4">
-                 <div>
-                    <label for="gemini-model" class="block text-sm font-medium">Gemini AI Model</label>
-                    <select id="gemini-model" class="mt-1 block w-full input">
-                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
-                        <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
-                    </select>
-                </div>
-                 <div>
-                    <label for="gemini-keys" class="block text-sm font-medium">Gemini API Keys (comma-separated)</label>
-                    <textarea id="gemini-keys" rows="3" class="mt-1 block w-full input" placeholder="key1,key2,key3"></textarea>
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
-            </form>
-        </div>
-    </div>
-
     <div id="cloud-api-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-6">Cloud API Settings</h2>
@@ -378,6 +356,7 @@
                 <button data-tab="describe-holdings" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Describe Holdings</button>
                 <button data-tab="portfolio-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Portfolio Analysis</button>
                 <button data-tab="trade-analysis" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Trade Analysis</button>
+                <button data-tab="find-sector" class="tab-button tab-inactive px-4 py-2 text-sm font-medium focus:outline-none">Find Sector</button>
              </div>
             <form id="cloud-prompt-form" class="space-y-4 mt-4">
                 <div data-tab-panel="weekly-summary">
@@ -395,6 +374,10 @@
                  <div data-tab-panel="trade-analysis" class="hidden">
                     <label for="prompt-cloud-trade-analysis" class="block text-sm font-medium">Trade Analysis Prompt</label>
                     <textarea id="prompt-cloud-trade-analysis" rows="4" class="mt-1 block w-full input"></textarea>
+                </div>
+                 <div data-tab-panel="find-sector" class="hidden">
+                    <label for="prompt-cloud-find-sector" class="block text-sm font-medium">Find Sector Prompt</label>
+                    <textarea id="prompt-cloud-find-sector" rows="4" class="mt-1 block w-full input"></textarea>
                 </div>
                  <div class="mt-6 flex justify-end space-x-3">
                     <button type="button" class="btn-cancel btn bg-slate-200 py-2 px-4 rounded-md">Cancel</button>
@@ -495,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 riskPerTradePercentage: 0.8,
                 moderateDrawdownThreshold: 5,
                 highRiskDrawdownThreshold: 10,
-                apiKeys: [],
                 alphaVantageKey: '',
                 cloudApiConfigs: [
                     { id: 'cloud-1', name: "API1", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "[EXPRESS] gemini-2.5-pro-preview-06-05" },
@@ -505,13 +487,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     { id: 'cloud-5', name: "API5", apiKey: "auth0|6814bb514201ed4536f06592", baseUrl: "https://deepseek.erikpsw.works/v1", model: "qwen3-235b-a22b-non-thinking" },
                     { id: 'cloud-6', name: "API6", apiKey: "sk-7O1ZQWEgyGzFhyQPp2wx2geg2wpjEWojtli60GWdD7mUmgg2", baseUrl: "https://api.sikong.shop/v1", model: "gemini-2.5-pro-preview-05-06" }
                 ],
-                currentApiKeyIndex: 0, 
-                geminiModel: 'gemini-1.5-flash-latest',
                 theme: 'light',
                 promptCloudWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
                 promptCloudDescribeHoldings: 'Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n{{DATA}}',
                 promptCloudPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
-                promptCloudTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.'
+                promptCloudTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.',
+                promptCloudFindSector: 'GICS sector for ticker {{TICKER}}? Respond with only the sector name.'
             },
             sort: { key: 'entryDate', dir: 'desc' }
         };
@@ -523,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'total-assets', 'current-cash', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
-                'btn-settings', 'btn-gemini-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
+                'btn-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
                 'btn-gen-summary', 'btn-analyze-portfolio', 'btn-describe-holdings', 
                 'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
                 'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk', 'nav-history-container',
@@ -535,10 +516,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'stop-modal', 'stop-form', 'stop-select', 'new-stop',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
                 'provider-modal', 'provider-form', 'alphavantage-key', 
-                'gemini-modal', 'gemini-form', 'gemini-model', 'gemini-keys',
                 'cloud-api-modal', 'cloud-api-form', 'cloud-api-id', 'cloud-api-name', 'cloud-api-key', 'cloud-api-base-url', 'cloud-api-model',
                 'cloud-api-list-container', 'cloud-api-table', 'cloud-api-body',
-                'cloud-prompt-modal', 'cloud-prompt-form', 'prompt-cloud-weekly-summary', 'prompt-cloud-describe-holdings', 'prompt-cloud-portfolio-analysis', 'prompt-cloud-trade-analysis',
+                'cloud-prompt-modal', 'cloud-prompt-form', 'prompt-cloud-weekly-summary', 'prompt-cloud-describe-holdings', 'prompt-cloud-portfolio-analysis', 'prompt-cloud-trade-analysis', 'prompt-cloud-find-sector',
                 'summary-modal', 'summary-content', 'btn-copy-summary',
                 'stats-modal', 'stats-content',
                 'portfolio-modal', 'portfolio-content', 'btn-copy-portfolio',
@@ -617,40 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // --- API ---
         const api = {
-            callGoogleLlm: async (prompt, targetElId) => {
-                 const { apiKeys, geminiModel } = state.settings;
-                if (apiKeys.length === 0) {
-                    return "Error: No Google AI keys configured.";
-                }
-                
-                const totalKeys = apiKeys.length;
-                for (let i = 0; i < totalKeys; i++) {
-                    const keyIndex = state.settings.currentApiKeyIndex;
-                    const key = apiKeys[keyIndex];
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${key}`;
-                    
-                    state.settings.currentApiKeyIndex = (keyIndex + 1) % totalKeys;
-
-                    try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-                        if (res.ok) {
-                            const result = await res.json();
-                            const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) return text;
-                        }
-                        if (res.status === 429 || res.status === 403) {
-                             console.error(`Google Key index ${keyIndex} failed with status ${res.status}. Trying next.`);
-                             await new Promise(resolve => setTimeout(resolve, 250));
-                             continue;
-                        } else {
-                            const errorData = await res.json().catch(() => ({}));
-                            console.error(`Google Key index ${keyIndex} failed: Status ${res.status}. ${errorData?.error?.message || 'Unknown error.'}`);
-                        }
-                    } catch (error) { console.error(`Google Key index ${keyIndex} Network Error: ${error.message}`); }
-                }
-                
-                return `Error: All Google AI keys failed. Check permissions and quotas.`;
-            },
             callCloudLlm: async (systemPrompt, userPrompt, targetElId) => {
                  const cloudConfigs = state.settings.cloudApiConfigs;
                 if (!cloudConfigs.length) {
@@ -1092,11 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dom['set-high-risk-dd'].value = state.settings.highRiskDrawdownThreshold;
                     ui.openModal(dom['settings-modal']);
                 };
-                dom['btn-gemini-settings'].onclick = () => { 
-                    dom['gemini-model'].value = state.settings.geminiModel; 
-                    dom['gemini-keys'].value = state.settings.apiKeys.join(', ');
-                    ui.openModal(dom['gemini-modal']); 
-                };
+                
                 dom['btn-provider-settings'].onclick = () => { 
                     dom['alphavantage-key'].value = state.settings.alphaVantageKey; 
                     ui.openModal(dom['provider-modal']); 
@@ -1110,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dom['prompt-cloud-describe-holdings'].value = state.settings.promptCloudDescribeHoldings;
                     dom['prompt-cloud-portfolio-analysis'].value = state.settings.promptCloudPortfolioAnalysis;
                     dom['prompt-cloud-trade-analysis'].value = state.settings.promptCloudTradeAnalysis;
+                    dom['prompt-cloud-find-sector'].value = state.settings.promptCloudFindSector;
                     ui.openModal(dom['cloud-prompt-modal']);
                 };
                 dom['btn-import'].onclick = () => dom['file-input'].click();
@@ -1127,7 +1070,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['exit-form'].onsubmit = events.handleSaveExit;
                 dom['stop-form'].onsubmit = events.handleSaveStop;
                 dom['settings-form'].onsubmit = events.handleSaveSettings;
-                dom['gemini-form'].onsubmit = events.handleSaveGeminiKeys;
                 dom['provider-form'].onsubmit = events.handleSaveProviderKeys;
                 dom['cloud-api-form'].onsubmit = events.handleSaveCloudApiConfig;
                 dom['cloud-prompt-form'].onsubmit = events.handleSaveCloudPrompt;
@@ -1138,14 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['trades-head'].onclick = events.handleSort;
                 dom['trades-body'].onclick = events.handleEditTrade;
                 
-                const debouncedFindSectorLogic = util.debounce(events.handleFindSectorLogic, 500);
-                dom['btn-find-sector'].onclick = () => {
-                    const ticker = dom.ticker.value;
-                    if (!ticker) return util.showAlert('Enter a ticker first.');
-                    ui.setLoading(dom['btn-find-sector'], true, '');
-                    debouncedFindSectorLogic(ticker);
-                };
-
+                dom['btn-find-sector'].onclick = events.handleFindSector;
                 dom['btn-analyze-trade'].onclick = events.handleAnalyzeTrade;
                 
                 dom.modalCancelButtons.forEach(btn => btn.onclick = () => ui.closeModal(btn.closest('.modal-overlay')));
@@ -1262,14 +1197,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.closeModal(dom['settings-modal']); 
                 ui.render(); 
             },
-            handleSaveGeminiKeys: (e) => { 
-                e.preventDefault(); 
-                state.settings.geminiModel = dom['gemini-model'].value; 
-                state.settings.apiKeys = dom['gemini-keys'].value.split(',').map(k => k.trim()).filter(Boolean);
-                state.settings.currentApiKeyIndex = 0; 
-                ui.closeModal(dom['gemini-modal']); 
-                util.showAlert(`Google AI settings saved.`); 
-            },
             handleSaveProviderKeys: (e) => {
                 e.preventDefault();
                 state.settings.alphaVantageKey = dom['alphavantage-key'].value.trim();
@@ -1305,6 +1232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.settings.promptCloudDescribeHoldings = dom['prompt-cloud-describe-holdings'].value;
                 state.settings.promptCloudPortfolioAnalysis = dom['prompt-cloud-portfolio-analysis'].value;
                 state.settings.promptCloudTradeAnalysis = dom['prompt-cloud-trade-analysis'].value;
+                state.settings.promptCloudFindSector = dom['prompt-cloud-find-sector'].value;
                 ui.closeModal(dom['cloud-prompt-modal']);
                 util.showAlert('Cloud AI prompts saved.');
             },
@@ -1498,17 +1426,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await api.callCloudLlm(systemPrompt, userPrompt, 'ai-trade-content');
                 dom['ai-trade-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
             },
-            handleFindSectorLogic: async (ticker) => {
-                const prompt = `GICS sector for ticker ${ticker}? Respond with only the sector name.`;
-                const result = await api.callGoogleLlm(prompt);
+            handleFindSector: async () => {
+                const ticker = dom.ticker.value;
+                if (!ticker) return util.showAlert('Enter a ticker first.');
+                ui.setLoading(dom['btn-find-sector'], true, '');
+
+                const systemPrompt = "You are a helpful financial analyst AI.";
+                const userPrompt = state.settings.promptCloudFindSector.replace('{{TICKER}}', ticker);
+                const result = await api.callCloudLlm(systemPrompt);
 
                 if (result && !result.startsWith('Error:')) {
                     const sector = result.trim().replace(/\.$/, '');
                     dom.sector.value = sector;
-                    dom['sector-content'].textContent = sector;
-                    ui.openModal(dom['sector-modal']);
                 } else {
-                    util.showAlert('Could not find sector. Google AI analysis failed.');
+                    util.showAlert(`Could not find sector. AI analysis failed. Last error: ${result}`);
                 }
                 ui.setLoading(dom['btn-find-sector'], false);
             }
