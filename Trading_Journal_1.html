@@ -20,12 +20,12 @@
         }
 
         .dark {
-            --bg-primary: #020617; /* slate-950 */
-            --bg-secondary: #0f172a; /* slate-900 */
-            --text-primary: #f8fafc; /* slate-50 */
-            --text-secondary: #94a3b8; /* slate-400 */
-            --border-color: #1e293b; /* slate-800 */
-            --accent-color: #6366f1; /* indigo-500 */
+            --bg-primary: #030712; /* gray-950 */
+            --bg-secondary: #111827; /* gray-900 */
+            --text-primary: #f9fafb; /* gray-50 - Almost white for high contrast */
+            --text-secondary: #cbd5e1; /* slate-300 - Brighter secondary text */
+            --border-color: #374151; /* gray-700 */
+            --accent-color: #818cf8; /* indigo-400 */
         }
         body { 
             font-family: 'Inter', sans-serif; 
@@ -52,7 +52,18 @@
         .loader, .loader-sm { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         .loader { width: 30px; height: 30px; border-width: 4px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .gradient-text { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .gradient-text { 
+            background: linear-gradient(to right, #3b82f6, #8b5cf6); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .dark .gradient-text {
+            background-image: none;
+            -webkit-text-fill-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
         .alert-modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         .alert-modal-overlay.visible { opacity: 1; pointer-events: auto; }
         .alert-modal-content { padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
@@ -60,13 +71,13 @@
         .tab-active { background-color: #4f46e5; color: #ffffff; }
         .tab-inactive { background-color: #374151; color: #d1d5db; }
         
-        #trades-table thead, #nav-history-table thead {
+        #trades-table thead, #nav-history-table thead, #cloud-api-table thead {
             background-color: var(--bg-primary);
         }
-        #trades-table tbody tr, #nav-history-table tbody tr {
+        #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr {
             border-bottom: 1px solid var(--border-color);
         }
-        #trades-table tbody tr:last-child, #nav-history-table tbody tr:last-child {
+        #trades-table tbody tr:last-child, #nav-history-table tbody tr:last-child, #cloud-api-table tbody tr:last-child {
             border-bottom: none;
         }
 
@@ -83,10 +94,12 @@
         }
         
         .dark .tab-inactive { background-color: #4b5563; }
-        .dark .input { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
-        .dark .input::placeholder { color: #64748b; }
-        .dark .btn-cancel { background-color: #334155; color: #e2e8f0; }
-        .dark .btn-cancel:hover { background-color: #475569; }
+        .dark .input { background-color: #1f2937; border-color: #374151; color: #f9fafb; }
+        .dark .input::placeholder { color: #6b7280; }
+        .dark .btn-cancel { background-color: #374151; color: #e5e7eb; }
+        .dark .btn-cancel:hover { background-color: #4b5563; }
+        .dark .prose-invert { color: var(--text-secondary); }
+        .dark .prose-invert h1, .dark .prose-invert h2, .dark .prose-invert h3, .dark .prose-invert h4, .dark .prose-invert strong { color: var(--text-primary); }
     </style>
 </head>
 <body class="text-slate-800">
@@ -237,7 +250,7 @@
                     <div><label for="entry-price" class="block text-sm font-medium text-secondary">Entry Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
                     <div><label for="position" class="block text-sm font-medium text-secondary">Position</label><input type="number" step="any" id="position" required class="mt-1 block w-full input"></div>
                     <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium text-secondary">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
-                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
+                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
                     <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium text-secondary">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
                 </div>
                 
@@ -263,7 +276,7 @@
                 </div>
                 
                 <div class="mt-6 flex justify-between items-center">
-                    <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 py-2 px-4 rounded-md">✨ Analyze</button>
+                    <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 py-2 px-4 rounded-md">✨ Analyze</button>
                     <div><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
                 </div>
             </form>
@@ -827,8 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     dom['theme-icon-light'].classList.remove('hidden');
                     dom['theme-icon-dark'].classList.add('hidden');
                 }
-                 Chart.defaults.color = theme === 'dark' ? '#94a3b8' : '#666';
-                 Chart.defaults.borderColor = theme === 'dark' ? '#334155' : '#e2e8f0';
+                 Chart.defaults.color = theme === 'dark' ? '#9ca3af' : '#6b7280';
+                 Chart.defaults.borderColor = theme === 'dark' ? '#374151' : '#e5e7eb';
                 ui.renderNavChart();
                 ui.renderAllocationChart();
             },
@@ -884,9 +897,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const zoneEl = dom['risk-zone'];
                 zoneEl.textContent = riskZone;
                 zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
-                if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800');
-                else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
-                else zoneEl.classList.add('bg-red-100', 'text-red-800');
+                if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-300');
+                else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900/50', 'dark:text-yellow-300');
+                else zoneEl.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/50', 'dark:text-red-300');
             },
             renderTrades: () => {
                 const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
@@ -909,9 +922,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { metrics, ...trade } = tradeWithMetrics;
                     const pl = trade.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
                     const r = trade.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                    const plClass = pl >= 0 ? 'text-green-600' : 'text-red-600';
-                    const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
-                    return `<tr data-id="${trade.id}" class="hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    const plClass = pl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                    const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                    return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" data-id="${trade.id}">
                             <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
                             <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatDate(trade.entryDate)}</td>
                             <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatCurrency(trade.entryPrice)}</td>
@@ -940,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.navChart = new Chart(ctx, {
                     type: 'line',
                     data: { datasets: [{ label: 'NAV', data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' } }, y: { ticks: { callback: v => util.formatCurrency(v) } } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' }, grid: { color: 'rgba(156, 163, 175, 0.1)' } }, y: { ticks: { callback: v => util.formatCurrency(v) }, grid: { color: 'rgba(156, 163, 175, 0.1)'} } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
                 });
             },
             renderAllocationChart: () => {
@@ -966,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 placeholder.style.display = 'none';
                 const ctx = canvas.getContext('2d');
                 const data = Object.values(allocation);
-                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'], borderColor: '#ffffff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
+                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'], borderColor: 'var(--bg-secondary)', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
             },
             renderNavHistory: () => {
                 const container = dom['nav-history-container'];
@@ -1021,10 +1034,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const s = calc.getAdvancedStats();
                 dom['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
                     `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600 dark:text-green-400':'text-red-600 dark:text-red-400'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
                         <div class="themed-bg p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
-                        <div class="themed-bg p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
-                        <div class="themed-bg p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
+                        <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
+                        <div class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
                         <div class="themed-bg p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
                     </div>`;
                 ui.openModal(dom['stats-modal']);
