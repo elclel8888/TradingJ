@@ -8,71 +8,57 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f8fafc; /* slate-50 */
-            --bg-secondary: #ffffff; /* white */
-            --text-primary: #1e293b; /* slate-800 */
-            --text-secondary: #64748b; /* slate-500 */
-            --border-color: #e2e8f0; /* slate-200 */
-            --accent-color: #4338ca; /* indigo-700 */
+            --bg-primary: #DAE0E6;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A1A1B;
+            --text-secondary: #878A8C;
+            --border-color: #CCCCCC;
+            --accent-primary: #0079D3;
+            --accent-secondary: #FF4500;
         }
 
-        .dark {
-            --bg-primary: #030712; /* gray-950 */
-            --bg-secondary: #111827; /* gray-900 */
-            --text-primary: #ffffff; /* white */
-            --text-secondary: #d1d5db; /* gray-300 */
-            --border-color: #374151; /* gray-700 */
-            --accent-color: #818cf8; /* indigo-400 */
-        }
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'IBM Plex Sans', sans-serif;
             background-color: var(--bg-primary); 
             color: var(--text-primary);
-            transition: background-color 0.3s, color 0.3s;
+            font-size: 16px;
+            line-height: 1.6;
         }
         .themed-bg, .stat-card, .modal-content {
              background-color: var(--bg-secondary);
-             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
-             border-color: var(--border-color);
+             border: 1px solid var(--border-color);
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; border-left-color: var(--accent-color); }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-primary); }
         .btn { transition: all 0.2s ease-in-out; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .btn:active { transform: translateY(-1px) scale(0.98); }
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background-color: var(--accent-primary); color: white; }
+        .btn-secondary { background-color: var(--accent-secondary); color: white; }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .loader, .loader-sm { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+        .loader, .loader-sm { border: 2px solid #f3f3f3; border-top: 2px solid var(--accent-primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         .loader { width: 30px; height: 30px; border-width: 4px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .gradient-text { 
-            background: linear-gradient(to right, #3b82f6, #8b5cf6); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-        }
-        .dark .gradient-text {
-            background-image: none;
-            -webkit-text-fill-color: var(--text-primary);
-            color: var(--text-primary);
-        }
-
         .alert-modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         .alert-modal-overlay.visible { opacity: 1; pointer-events: auto; }
         .alert-modal-content { padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
         .alert-modal-overlay.visible .alert-modal-content { transform: scale(1); }
-        .tab-active { background-color: #4f46e5; color: #ffffff; }
-        .tab-inactive { background-color: #374151; color: #d1d5db; }
+        .tab-active { border-bottom: 2px solid var(--accent-secondary); color: var(--accent-secondary); }
+        .tab-inactive { border-bottom: 2px solid transparent; color: var(--text-secondary); }
         
         #trades-table thead, #nav-history-table thead, #cloud-api-table thead {
             background-color: var(--bg-primary);
+            border-bottom: 2px solid var(--border-color);
         }
         #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr {
             border-bottom: 1px solid var(--border-color);
@@ -87,31 +73,25 @@
             #trades-table, #trades-table tbody, #trades-table tr,
             #nav-history-table, #nav-history-table tbody, #nav-history-table tr,
             #cloud-api-table, #cloud-api-table tbody, #cloud-api-table tr { display: block; width: 100%; }
-            #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr { margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; background-color: var(--bg-secondary); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); cursor: pointer; }
+            #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr { margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; background-color: var(--bg-secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; }
             #trades-table tbody td, #nav-history-table tbody td, #cloud-api-table tbody td { display: flex; justify-content: space-between; align-items: center; text-align: right; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); }
             #trades-table tbody td:last-child, #nav-history-table tbody td:last-child, #cloud-api-table tbody td:last-child { border-bottom: none; }
             #trades-table tbody td::before, #nav-history-table tbody td::before, #cloud-api-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: var(--text-secondary); }
         }
         
-        .dark .tab-inactive { background-color: #4b5563; }
-        .dark .input { background-color: #1f2937; border-color: #374151; color: #f9fafb; }
-        .dark .input::placeholder { color: #6b7280; }
-        .dark .btn-cancel { background-color: #374151; color: #e5e7eb; }
-        .dark .btn-cancel:hover { background-color: #4b5563; }
-        .dark .prose-invert { color: var(--text-secondary); }
-        .dark .prose-invert h1, .dark .prose-invert h2, .dark .prose-invert h3, .dark .prose-invert h4, .dark .prose-invert strong { color: var(--text-primary); }
+        .input { background-color: #f6f7f8; border-color: #edeff1; color: var(--text-primary); font-size: 1rem; }
+        .input::placeholder { color: #a9a9a9; }
+        .btn-cancel { background-color: #edeff1; color: #1c1c1c; }
+        .btn-cancel:hover { background-color: #e2e2e2; }
+        .prose { color: var(--text-secondary); }
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose strong { color: var(--text-primary); }
     </style>
 </head>
-<body class="text-slate-800">
+<body class="antialiased">
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-        <header class="mb-8 p-6 themed-bg rounded-xl shadow-md relative">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">Trading Journal</h1>
-            <p class="mt-2 text-secondary">Track your trades, analyze your performance, and refine your strategy.</p>
-            <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
-                <svg id="theme-icon-light" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-            </button>
+        <header class="mb-8 p-4 themed-bg rounded-lg shadow-sm flex justify-between items-center">
+            <h1 class="text-3xl sm:text-4xl font-bold" style="color: var(--accent-secondary);">r/TradingJournal</h1>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -171,20 +151,20 @@
                 <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Data Management</h2>
                     <div class="space-y-4">
-                        <button id="btn-import" class="btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-md">Import Local Data</button>
+                        <button id="btn-import" class="btn w-full btn-primary py-2 px-4 rounded-md">Import Local Data</button>
                         <input type="file" id="file-input" class="hidden" accept=".json">
-                        <button id="btn-load-online" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">Load Online Data</button>
-                        <button id="btn-export" class="btn w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 px-4 rounded-md">Export Data</button>
+                        <button id="btn-load-online" class="btn w-full btn-primary py-2 px-4 rounded-md">Load Online Data</button>
+                        <button id="btn-export" class="btn w-full btn-secondary py-2 px-4 rounded-md">Export Data</button>
                     </div>
                 </section>
                 
                 <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Actions</h2>
                     <div class="space-y-4">
-                        <button id="btn-add-trade" class="btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-md">Add New Trade</button>
-                        <button id="btn-update-stop" class="btn w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 px-4 rounded-md">Update Trailing Stop</button>
-                        <button id="btn-exit-trade" class="btn w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2 px-4 rounded-md">Exit Trade</button>
-                        <button id="btn-refresh" class="btn w-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white py-2 px-4 rounded-md flex items-center justify-center">
+                        <button id="btn-add-trade" class="btn w-full btn-primary py-2 px-4 rounded-md">Add New Trade</button>
+                        <button id="btn-update-stop" class="btn w-full btn-primary py-2 px-4 rounded-md">Update Trailing Stop</button>
+                        <button id="btn-exit-trade" class="btn w-full btn-secondary py-2 px-4 rounded-md">Exit Trade</button>
+                        <button id="btn-refresh" class="btn w-full btn-primary py-2 px-4 rounded-md flex items-center justify-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 12M20 20l-1.5-1.5A9 9 0 003.5 12"></path></svg>
                             Refresh Prices
                         </button>
@@ -194,15 +174,15 @@
                 <section class="themed-bg p-6 rounded-lg shadow">
                     <h2 class="text-xl font-bold mb-4">Configuration & Analysis</h2>
                     <div class="space-y-4">
-                        <button id="btn-settings" class="btn w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
+                        <button id="btn-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
                         <button id="btn-provider-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Data Provider Settings</button>
                         <button id="btn-cloud-api-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud API Settings</button>
                         <button id="btn-cloud-ai-prompt" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud AI Prompts</button>
-                        <button id="btn-view-stats" class="btn w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
+                        <button id="btn-view-stats" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
                         <hr style="border-color: var(--border-color);">
-                        <button id="btn-gen-summary" class="btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
-                        <button id="btn-analyze-portfolio" class="btn w-full bg-gradient-to-r from-sky-500 to-sky-600 text-white py-2 px-4 rounded-md">📈 Analyze Current Portfolio</button>
-                        <button id="btn-describe-holdings" class="btn w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2 px-4 rounded-md">📄 Describe Trade History</button>
+                        <button id="btn-gen-summary" class="btn w-full btn-secondary py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
+                        <button id="btn-analyze-portfolio" class="btn w-full btn-secondary py-2 px-4 rounded-md">📈 Analyze Current Portfolio</button>
+                        <button id="btn-describe-holdings" class="btn w-full btn-secondary py-2 px-4 rounded-md">📄 Describe Trade History</button>
                     </div>
                 </section>
             </aside>
@@ -277,7 +257,7 @@
                 
                 <div class="mt-6 flex justify-between items-center">
                     <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 py-2 px-4 rounded-md">✨ Analyze</button>
-                    <div><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                    <div><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 btn-primary text-white py-2 px-4 rounded-md">Save</button></div>
                 </div>
             </form>
         </div>
@@ -293,7 +273,7 @@
                     <div><label for="exit-price" class="block text-sm font-medium text-secondary">Exit Price</label><input type="number" step="any" id="exit-price" required class="mt-1 block w-full input"></div>
                     <div><label for="exit-remarks" class="block text-sm font-medium text-secondary">Exit Remarks</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-red-600 text-white py-2 px-4 rounded-md">Save Exit</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-secondary py-2 px-4 rounded-md">Save Exit</button></div>
             </form>
         </div>
     </div>
@@ -306,7 +286,7 @@
                     <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
                     <div><label for="new-stop" class="block text-sm font-medium text-secondary">New Trailing Stop</label><input type="number" step="any" id="new-stop" required class="mt-1 block w-full input"></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-yellow-500 text-white py-2 px-4 rounded-md">Update Stop</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Update Stop</button></div>
             </form>
         </div>
     </div>
@@ -325,7 +305,7 @@
                     <div><label for="set-moderate-dd" class="block text-sm font-medium text-secondary">Moderate Drawdown Threshold (%)</label><input type="number" id="set-moderate-dd" step="0.1" class="mt-1 block w-full input"></div>
                     <div><label for="set-high-risk-dd" class="block text-sm font-medium text-secondary">High-Risk Drawdown Threshold (%)</label><input type="number" id="set-high-risk-dd" step="0.1" class="mt-1 block w-full input"></div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Save</button></div>
             </form>
         </div>
     </div>
@@ -335,7 +315,7 @@
             <h2 class="text-2xl font-bold mb-6">Data Provider Settings</h2>
             <form id="provider-form">
                  <div><label for="alphavantage-key" class="block text-sm font-medium text-secondary">Alpha Vantage API Key</label><input type="password" id="alphavantage-key" class="mt-1 block w-full input"></div>
-                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button></div>
+                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Save</button></div>
             </form>
         </div>
     </div>
@@ -350,7 +330,7 @@
                 <div><label for="cloud-api-key" class="block text-sm font-medium text-secondary">API Key</label><input type="password" id="cloud-api-key" class="mt-1 block w-full input" required></div>
                 <div><label for="cloud-api-base-url" class="block text-sm font-medium text-secondary">Base URL</label><input type="text" id="cloud-api-base-url" class="mt-1 block w-full input" required></div>
                 <div><label for="cloud-api-model" class="block text-sm font-medium text-secondary">Model</label><input type="text" id="cloud-api-model" class="mt-1 block w-full input" required></div>
-                <div class="md:col-span-4 flex justify-end mt-2"><button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Add/Update API</button></div>
+                <div class="md:col-span-4 flex justify-end mt-2"><button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Add/Update API</button></div>
             </form>
 
             <div id="cloud-api-list-container" class="overflow-x-auto">
@@ -406,7 +386,7 @@
                 </div>
                  <div class="mt-6 flex justify-end space-x-3">
                     <button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button>
-                    <button type="submit" class="btn bg-indigo-600 text-white py-2 px-4 rounded-md">Save</button>
+                    <button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Save</button>
                 </div>
             </form>
         </div>
@@ -416,7 +396,7 @@
     <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ Weekly Performance Summary</h2>
-            <div id="summary-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="summary-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-summary" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn ml-2 bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -427,7 +407,7 @@
     <div id="stats-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">Advanced Statistics</h2>
-            <div id="stats-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4"></div>
+            <div id="stats-content" class="prose dark:prose-invert max-w-none space-y-4"></div>
             <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
         </div>
     </div>
@@ -435,10 +415,10 @@
     <div id="portfolio-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📈 Current Portfolio Analysis</h2>
-            <div id="portfolio-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="portfolio-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-portfolio" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
-                <button type="button" class="btn-cancel btn ml-2 bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
+                <button type="button" class="btn-cancel btn ml-2 btn-primary text-white py-2 px-4 rounded-md">Close</button>
             </div>
         </div>
     </div>
@@ -446,7 +426,7 @@
     <div id="holdings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📄 Trade History Description</h2>
-            <div id="holdings-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="holdings-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-between items-center">
                 <button type="button" id="btn-copy-holdings" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -457,10 +437,10 @@
     <div id="ai-trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ AI Trade Analysis</h2>
-            <div id="ai-trade-content" class="prose dark:prose-invert max-w-none text-secondary space-y-4 min-h-[100px]"></div>
+            <div id="ai-trade-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end space-x-3">
                  <button type="button" id="btn-copy-ai-trade" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
-                <button type="button" class="btn-cancel btn bg-indigo-600 text-white py-2 px-4 rounded-md">Close</button>
+                <button type="button" class="btn-cancel btn btn-primary text-white py-2 px-4 rounded-md">Close</button>
             </div>
         </div>
     </div>
@@ -477,11 +457,11 @@
         <div class="alert-modal-content">
             <p id="alert-msg" class="mb-6 text-lg"></p>
             <div id="alert-ok">
-                <button id="btn-alert-ok" class="btn bg-indigo-600 text-white py-2 px-6 rounded-md">OK</button>
+                <button id="btn-alert-ok" class="btn btn-primary py-2 px-6 rounded-md">OK</button>
             </div>
             <div id="alert-confirm" class="hidden justify-center gap-4">
                 <button id="btn-confirm-cancel" class="btn-cancel py-2 px-6 rounded-md">Cancel</button>
-                <button id="btn-confirm-ok" class="btn bg-red-600 text-white py-2 px-6 rounded-md">Proceed</button>
+                <button id="btn-confirm-ok" class="btn btn-secondary py-2 px-6 rounded-md">Proceed</button>
             </div>
         </div>
     </div>
@@ -551,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'ai-trade-modal', 'ai-trade-content', 'btn-copy-ai-trade',
                 'sector-modal', 'sector-content', 'alert-modal', 'alert-msg', 'alert-ok',
                 'btn-alert-ok', 'alert-confirm', 'btn-confirm-cancel', 'btn-confirm-ok',
-                'theme-toggle', 'theme-icon-light', 'theme-icon-dark', 'cloud-prompt-tabs'
+                'cloud-prompt-tabs'
             ];
             ids.forEach(id => dom[id] = document.getElementById(id));
             dom.modalCancelButtons = document.querySelectorAll('.btn-cancel');
@@ -830,18 +810,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.renderNavHistory(); 
             },
             applyTheme: (theme) => {
+                // This function is kept for potential future re-introduction of themes, but is not actively used.
                 state.settings.theme = theme;
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    dom['theme-icon-light'].classList.add('hidden');
-                    dom['theme-icon-dark'].classList.remove('hidden');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    dom['theme-icon-light'].classList.remove('hidden');
-                    dom['theme-icon-dark'].classList.add('hidden');
-                }
-                 Chart.defaults.color = theme === 'dark' ? '#9ca3af' : '#6b7280';
-                 Chart.defaults.borderColor = theme === 'dark' ? '#374151' : '#e5e7eb';
+                Chart.defaults.color = '#878A8C';
+                Chart.defaults.borderColor = '#CCCCCC';
                 ui.renderNavChart();
                 ui.renderAllocationChart();
             },
@@ -897,9 +869,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const zoneEl = dom['risk-zone'];
                 zoneEl.textContent = riskZone;
                 zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
-                if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-300');
-                else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900/50', 'dark:text-yellow-300');
-                else zoneEl.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/50', 'dark:text-red-300');
+                if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800');
+                else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
+                else zoneEl.classList.add('bg-red-100', 'text-red-800');
             },
             renderTrades: () => {
                 const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
@@ -922,9 +894,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { metrics, ...trade } = tradeWithMetrics;
                     const pl = trade.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
                     const r = trade.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                    const plClass = pl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                    const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-                    return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" data-id="${trade.id}">
+                    const plClass = pl >= 0 ? 'text-green-600' : 'text-red-600';
+                    const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
+                    return `<tr class="hover:bg-slate-50 cursor-pointer" data-id="${trade.id}">
                             <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
                             <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatDate(trade.entryDate)}</td>
                             <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatCurrency(trade.entryPrice)}</td>
@@ -952,8 +924,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (state.navChart) state.navChart.destroy();
                 state.navChart = new Chart(ctx, {
                     type: 'line',
-                    data: { datasets: [{ label: 'NAV', data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' }, grid: { color: 'rgba(156, 163, 175, 0.1)' } }, y: { ticks: { callback: v => util.formatCurrency(v) }, grid: { color: 'rgba(156, 163, 175, 0.1)'} } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
+                    data: { datasets: [{ label: 'NAV', data, borderColor: '#0079D3', backgroundColor: 'rgba(0, 121, 211, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' }, grid: { color: 'rgba(204, 204, 204, 0.1)' } }, y: { ticks: { callback: v => util.formatCurrency(v) }, grid: { color: 'rgba(204, 204, 204, 0.1)'} } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
                 });
             },
             renderAllocationChart: () => {
@@ -979,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 placeholder.style.display = 'none';
                 const ctx = canvas.getContext('2d');
                 const data = Object.values(allocation);
-                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#d946ef', '#0ea5e9', '#65a30d'], borderColor: 'var(--bg-secondary)', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
+                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#0079D3', '#FF4500', '#4856a3', '#ffb000', '#7e53c1', '#00a368', '#ff8717', '#a3a3a3'], borderColor: 'var(--bg-secondary)', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
             },
             renderNavHistory: () => {
                 const container = dom['nav-history-container'];
@@ -1089,7 +1061,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-gen-summary'].onclick = events.handleGenSummary;
                 dom['btn-analyze-portfolio'].onclick = events.handleAnalyzePortfolio;
                 dom['btn-describe-holdings'].onclick = events.handleDescribeHoldings;
-                dom['theme-toggle'].onclick = events.handleThemeToggle;
                 
                 dom['trade-form'].onsubmit = events.handleSaveTrade;
                 dom['exit-form'].onsubmit = events.handleSaveExit;
@@ -1131,11 +1102,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const panelId = e.target.dataset.tab;
                 dom['cloud-prompt-form'].querySelector(`[data-tab-panel="${panelId}"]`).classList.remove('hidden');
-            },
-            handleThemeToggle: () => {
-                const newTheme = state.settings.theme === 'light' ? 'dark' : 'light';
-                localStorage.setItem('theme', newTheme);
-                ui.applyTheme(newTheme);
             },
             handleAddTradeClick: () => {
                 const totalOpenRisk_R = state.trades.filter(t => t.status === 'Open').reduce((sum, t) => sum + calc.getCurrentRiskR(t), 0);
@@ -1474,8 +1440,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const init = () => {
             cacheDom();
             events.init();
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            ui.applyTheme(savedTheme);
+            
+            // Set light theme as default
+            ui.applyTheme('light');
 
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
