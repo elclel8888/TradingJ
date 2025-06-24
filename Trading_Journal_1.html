@@ -13,13 +13,14 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #DAE0E6;
-            --bg-secondary: #FFFFFF;
-            --text-primary: #1A1A1B;
-            --text-secondary: #878A8C;
-            --border-color: #CCCCCC;
+            --bg-primary: #f1f5f9; /* slate-100 */
+            --bg-secondary: #ffffff; /* white */
+            --text-primary: #1e293b; /* slate-800 */
+            --text-secondary: #64748b; /* slate-500 */
+            --border-color: #e2e8f0; /* slate-200 */
             --accent-primary: #0079D3;
             --accent-secondary: #FF4500;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         body { 
@@ -27,18 +28,19 @@
             background-color: var(--bg-primary); 
             color: var(--text-primary);
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         .themed-bg, .stat-card, .modal-content, .alert-modal-content {
              background-color: var(--bg-secondary);
-             border: 1px solid var(--border-color);
+             box-shadow: var(--shadow);
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
         .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
-        .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-primary); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
         .btn { transition: all 0.2s ease-in-out; }
-        .btn:hover { opacity: 0.9; }
+        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        .btn:active { transform: translateY(0); }
         .btn-primary { background-color: var(--accent-primary); color: white; }
         .btn-secondary { background-color: var(--accent-secondary); color: white; }
         
@@ -51,7 +53,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .alert-modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         .alert-modal-overlay.visible { opacity: 1; pointer-events: auto; }
-        .alert-modal-content { padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
+        .alert-modal-content { padding: 2rem; border-radius: 0.5rem; max-width: 90%; width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s; }
         .alert-modal-overlay.visible .alert-modal-content { transform: scale(1); }
         .tab-active { border-bottom: 2px solid var(--accent-secondary); color: var(--accent-secondary); }
         .tab-inactive { border-bottom: 2px solid transparent; color: var(--text-secondary); }
@@ -79,7 +81,7 @@
             #trades-table tbody td::before, #nav-history-table tbody td::before, #cloud-api-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: var(--text-secondary); }
         }
         
-        .input { background-color: #f6f7f8; border-color: #edeff1; color: var(--text-primary); font-size: 1rem; }
+        .input { background-color: #f6f7f8; border: 1px solid #edeff1; color: var(--text-primary); font-size: 1rem; padding: 0.75rem; }
         .input::placeholder { color: #a9a9a9; }
         .btn-cancel { background-color: #edeff1; color: #1c1c1c; }
         .btn-cancel:hover { background-color: #e2e2e2; }
@@ -97,20 +99,20 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-8">
                 <!-- Stat Cards Grid -->
-                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="stat-card p-4 rounded-lg shadow sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-2xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-xl font-semibold mt-1">0.00R</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-xl font-semibold mt-1">$0.00</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-xl font-semibold mt-1">0%</p></div>
-                    <div class="stat-card p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="stat-card p-5 rounded-lg sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-3xl font-bold mt-1">$0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-2xl font-bold mt-1">$0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-2xl font-bold mt-1">$0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-2xl font-bold mt-1">0.00R</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-2xl font-bold mt-1">0.00R</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-2xl font-bold mt-1">$0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-2xl font-bold mt-1">0%</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-2xl font-bold mt-1">0.00</p></div>
                 </section>
 
                 <!-- NAV Chart -->
-                <section class="themed-bg p-4 md:p-6 rounded-lg shadow h-64 sm:h-80 lg:h-96">
-                    <h2 class="text-xl font-bold mb-4">Net Asset Value (NAV)</h2>
+                <section class="themed-bg p-6 rounded-lg h-80 sm:h-96">
+                    <h2 class="text-2xl font-bold mb-4">Net Asset Value (NAV)</h2>
                     <canvas id="nav-chart"></canvas>
                 </section>
             </div>
@@ -118,17 +120,17 @@
             <!-- Side Column -->
             <aside class="space-y-8">
                  <!-- Portfolio Allocation Chart -->
-                 <section id="portfolio-allocation-section" class="themed-bg p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4">Portfolio Allocation</h2>
+                 <section id="portfolio-allocation-section" class="themed-bg p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Portfolio Allocation</h2>
                     <div id="allocation-chart-container" class="h-64 flex items-center justify-center">
                         <canvas id="allocation-chart"></canvas>
                         <p id="allocation-placeholder" class="text-slate-400 text-center hidden"></p>
                     </div>
                 </section>
                  <!-- Risk Exposure Dashboard -->
-                <section id="risk-exposure-dashboard" class="themed-bg p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4">Risk Exposure</h2>
-                    <div class="space-y-3 text-sm">
+                <section id="risk-exposure-dashboard" class="themed-bg p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Risk Exposure</h2>
+                    <div class="space-y-4 text-base">
                         <div class="flex justify-between">
                             <span class="font-medium text-secondary">High-Water Mark</span>
                             <span id="high-water-mark" class="font-semibold">$0.00</span>
@@ -141,55 +143,56 @@
                             <span class="font-medium text-secondary">Total Open Risk</span>
                             <span id="total-open-risk" class="font-semibold">0.00R</span>
                         </div>
-                        <div class="flex justify-between items-center mt-2 pt-3 border-t" style="border-color: var(--border-color);">
+                        <div class="flex justify-between items-center mt-3 pt-3 border-t" style="border-color: var(--border-color);">
                             <span class="font-medium text-secondary">Risk Zone</span>
                             <span id="risk-zone" class="px-3 py-1 text-sm font-bold rounded-full"></span>
                         </div>
                     </div>
                 </section>
 
-                <section class="themed-bg p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4">Data Management</h2>
+                <section class="themed-bg p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Data Management</h2>
                     <div class="space-y-4">
-                        <button id="btn-import" class="btn w-full btn-primary py-2 px-4 rounded-md">Import Local Data</button>
+                        <button id="btn-import" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Import Local Data</button>
                         <input type="file" id="file-input" class="hidden" accept=".json">
-                        <button id="btn-load-online" class="btn w-full btn-primary py-2 px-4 rounded-md">Load Online Data</button>
-                        <button id="btn-export" class="btn w-full btn-secondary py-2 px-4 rounded-md">Export Data</button>
+                        <button id="btn-load-online" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Load Online Data</button>
+                        <button id="btn-export" class="btn w-full btn-secondary py-2.5 px-4 rounded-md font-semibold">Export Data</button>
                     </div>
                 </section>
                 
-                <section class="themed-bg p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4">Actions</h2>
+                <section class="themed-bg p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Actions</h2>
                     <div class="space-y-4">
-                        <button id="btn-add-trade" class="btn w-full btn-primary py-2 px-4 rounded-md">Add New Trade</button>
-                        <button id="btn-update-stop" class="btn w-full btn-primary py-2 px-4 rounded-md">Update Trailing Stop</button>
-                        <button id="btn-exit-trade" class="btn w-full btn-secondary py-2 px-4 rounded-md">Exit Trade</button>
-                        <button id="btn-refresh" class="btn w-full btn-primary py-2 px-4 rounded-md flex items-center justify-center">
+                        <button id="btn-add-trade" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Add New Trade</button>
+                        <button id="btn-update-stop" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Update Trailing Stop</button>
+                        <button id="btn-view-stop-history" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">View Trailing Stop History</button>
+                        <button id="btn-exit-trade" class="btn w-full btn-secondary py-2.5 px-4 rounded-md font-semibold">Exit Trade</button>
+                        <button id="btn-refresh" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold flex items-center justify-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 12M20 20l-1.5-1.5A9 9 0 003.5 12"></path></svg>
                             Refresh Prices
                         </button>
                     </div>
                 </section>
                 
-                <section class="themed-bg p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-bold mb-4">Configuration & Analysis</h2>
+                <section class="themed-bg p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">Configuration & Analysis</h2>
                     <div class="space-y-4">
-                        <button id="btn-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Set Capital & Risk</button>
-                        <button id="btn-provider-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Data Provider Settings</button>
-                        <button id="btn-cloud-api-settings" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud API Settings</button>
-                        <button id="btn-cloud-ai-prompt" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">Cloud AI Prompts</button>
-                        <button id="btn-view-stats" class="btn w-full bg-slate-600 text-white py-2 px-4 rounded-md">View Advanced Stats</button>
+                        <button id="btn-settings" class="btn w-full bg-slate-600 text-white py-2.5 px-4 rounded-md font-semibold">Set Capital & Risk</button>
+                        <button id="btn-provider-settings" class="btn w-full bg-slate-600 text-white py-2.5 px-4 rounded-md font-semibold">Data Provider Settings</button>
+                        <button id="btn-cloud-api-settings" class="btn w-full bg-slate-600 text-white py-2.5 px-4 rounded-md font-semibold">Cloud API Settings</button>
+                        <button id="btn-cloud-ai-prompt" class="btn w-full bg-slate-600 text-white py-2.5 px-4 rounded-md font-semibold">Cloud AI Prompts</button>
+                        <button id="btn-view-stats" class="btn w-full bg-slate-600 text-white py-2.5 px-4 rounded-md font-semibold">View Advanced Stats</button>
                         <hr style="border-color: var(--border-color);">
-                        <button id="btn-gen-summary" class="btn w-full btn-secondary py-2 px-4 rounded-md">✨ Generate Weekly Summary</button>
-                        <button id="btn-analyze-portfolio" class="btn w-full btn-secondary py-2 px-4 rounded-md">📈 Analyze Current Portfolio</button>
-                        <button id="btn-describe-holdings" class="btn w-full btn-secondary py-2 px-4 rounded-md">📄 Describe Trade History</button>
+                        <button id="btn-gen-summary" class="btn w-full btn-secondary py-2.5 px-4 rounded-md font-semibold">✨ Generate Weekly Summary</button>
+                        <button id="btn-analyze-portfolio" class="btn w-full btn-secondary py-2.5 px-4 rounded-md font-semibold">📈 Analyze Current Portfolio</button>
+                        <button id="btn-describe-holdings" class="btn w-full btn-secondary py-2.5 px-4 rounded-md font-semibold">📄 Describe Trade History</button>
                     </div>
                 </section>
             </aside>
         </div>
 
         <section class="mt-8 themed-bg p-4 md:p-6 rounded-lg shadow">
-             <h2 class="text-xl font-bold mb-4">Trade History</h2>
+             <h2 class="text-2xl font-bold mb-4">Trade History</h2>
              <div class="overflow-x-auto">
                 <table id="trades-table" class="min-w-full">
                     <thead id="trades-head">
@@ -213,7 +216,7 @@
         </section>
 
         <section class="mt-8 themed-bg p-4 md:p-6 rounded-lg shadow">
-            <h2 class="text-xl font-bold mb-4">NAV History</h2>
+            <h2 class="text-2xl font-bold mb-4">NAV History</h2>
             <div id="nav-history-container" class="overflow-x-auto"></div>
         </section>
     </main>
@@ -230,7 +233,7 @@
                     <div><label for="entry-price" class="block text-sm font-medium text-secondary">Entry Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
                     <div><label for="position" class="block text-sm font-medium text-secondary">Position</label><input type="number" step="any" id="position" required class="mt-1 block w-full input"></div>
                     <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium text-secondary">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
-                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
+                    <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
                     <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium text-secondary">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
                 </div>
                 
@@ -256,7 +259,7 @@
                 </div>
                 
                 <div class="mt-6 flex justify-between items-center">
-                    <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 py-2 px-4 rounded-md">✨ Analyze</button>
+                    <button type="button" id="btn-analyze-trade" class="btn bg-purple-100 text-purple-700 py-2 px-4 rounded-md">✨ Analyze</button>
                     <div><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn-save btn ml-2 btn-primary text-white py-2 px-4 rounded-md">Save</button></div>
                 </div>
             </form>
@@ -285,6 +288,7 @@
                  <div class="space-y-4">
                     <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
                     <div><label for="new-stop" class="block text-sm font-medium text-secondary">New Trailing Stop</label><input type="number" step="any" id="new-stop" required class="mt-1 block w-full input"></div>
+                    <div><label for="stop-remarks" class="block text-sm font-medium text-secondary">Remarks</label><textarea id="stop-remarks" rows="2" class="mt-1 block w-full input"></textarea></div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-primary py-2 px-4 rounded-md">Update Stop</button></div>
             </form>
@@ -453,6 +457,21 @@
         </div>
     </div>
     
+     <div id="stop-history-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6">Trailing Stop History</h2>
+            <div class="space-y-4">
+                <div><label for="stop-history-select" class="block text-sm font-medium text-secondary">Select Trade</label>
+                    <select id="stop-history-select" class="mt-1 block w-full input"></select>
+                </div>
+                <div id="stop-history-content" class="mt-4"></div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="alert-modal" class="alert-modal-overlay">
         <div class="alert-modal-content">
             <p id="alert-msg" class="mb-6 text-lg"></p>
@@ -492,7 +511,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     { id: 'cloud-5', name: "API5", apiKey: "auth0|6814bb514201ed4536f06592", baseUrl: "https://deepseek.erikpsw.works/v1", model: "qwen3-235b-a22b-non-thinking" },
                     { id: 'cloud-6', name: "API6", apiKey: "sk-7O1ZQWEgyGzFhyQPp2wx2geg2wpjEWojtli60GWdD7mUmgg2", baseUrl: "https://api.sikong.shop/v1", model: "gemini-2.5-pro-preview-05-06" }
                 ],
-                theme: 'light',
                 promptCloudWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
                 promptCloudDescribeHoldings: 'Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n{{DATA}}',
                 promptCloudPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
@@ -508,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ids = [
                 'total-assets', 'current-cash', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
-                'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-exit-trade', 'btn-refresh', 
+                'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-view-stop-history', 'btn-exit-trade', 'btn-refresh', 
                 'btn-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
                 'btn-gen-summary', 'btn-analyze-portfolio', 'btn-describe-holdings', 
                 'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
@@ -518,7 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'position', 'initial-stop', 'sector', 'tags', 'emotional-state', 'psychology-notes', 
                 'btn-find-sector', 'btn-analyze-trade',
                 'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price', 'exit-remarks',
-                'stop-modal', 'stop-form', 'stop-select', 'new-stop',
+                'stop-modal', 'stop-form', 'stop-select', 'new-stop', 'stop-remarks',
+                'stop-history-modal', 'stop-history-select', 'stop-history-content',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
                 'provider-modal', 'provider-form', 'alphavantage-key', 
                 'cloud-api-modal', 'cloud-api-form', 'cloud-api-id', 'cloud-api-name', 'cloud-api-key', 'cloud-api-base-url', 'cloud-api-model',
@@ -1059,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-gen-summary'].onclick = events.handleGenSummary;
                 dom['btn-analyze-portfolio'].onclick = events.handleAnalyzePortfolio;
                 dom['btn-describe-holdings'].onclick = events.handleDescribeHoldings;
+                dom['btn-view-stop-history'].onclick = events.handleViewStopHistory;
                 
                 dom['trade-form'].onsubmit = events.handleSaveTrade;
                 dom['exit-form'].onsubmit = events.handleSaveExit;
@@ -1133,7 +1153,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     sector: dom.sector.value,
                     tags: dom.tags.value.split(',').map(t => t.trim()).filter(Boolean),
                     emotionalState: dom['emotional-state'].value,
-                    psychologyNotes: dom['psychology-notes'].value
+                    psychologyNotes: dom['psychology-notes'].value,
+                    stopHistory: id ? state.trades.find(t=>t.id===id).stopHistory : []
                 };
                 if (id) {
                     Object.assign(state.trades.find(t => t.id === id), tradeData);
@@ -1144,7 +1165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     state.settings.currentCash -= cost;
-                    state.trades.push({ ...tradeData, id: `trade-${Date.now()}`, status: 'Open', currentPrice: null });
+                    state.trades.push({ ...tradeData, id: `trade-${Date.now()}`, status: 'Open', currentPrice: null, stopHistory: [] });
                 }
                 ui.closeModal(dom['trade-modal']);
                 calc.recordNavPoint();
@@ -1167,9 +1188,22 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             handleSaveStop: (e) => { 
                 e.preventDefault(); 
-                const trade = state.trades.find(t => t.id === dom['stop-select'].value); 
+                const tradeId = dom['stop-select'].value;
+                const newStop = parseFloat(dom['new-stop'].value);
+                const remarks = dom['stop-remarks'].value;
+                const trade = state.trades.find(t => t.id === tradeId); 
+                
                 if(trade) { 
-                    trade.trailingStop = parseFloat(dom['new-stop'].value); 
+                    if (!trade.stopHistory) {
+                        trade.stopHistory = [];
+                    }
+                    trade.stopHistory.push({
+                        date: new Date().toISOString(),
+                        oldStop: trade.trailingStop || trade.initialStop,
+                        newStop: newStop,
+                        remarks: remarks
+                    });
+                    trade.trailingStop = newStop;
                     ui.closeModal(dom['stop-modal']); 
                     ui.render(); 
                 } 
@@ -1431,6 +1465,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     util.showAlert(`Could not find sector. AI analysis failed. Last error: ${result}`);
                 }
                 ui.setLoading(dom['btn-find-sector'], false);
+            },
+            handleViewStopHistory: () => {
+                const select = dom['stop-history-select'];
+                select.innerHTML = '<option value="">Select a trade...</option>';
+                state.trades.forEach(t => {
+                    select.innerHTML += `<option value="${t.id}">${t.ticker} (${util.formatDate(t.entryDate)})</option>`;
+                });
+                // Clear previous history
+                dom['stop-history-content'].innerHTML = '';
+
+                select.onchange = (e) => {
+                    const trade = state.trades.find(t => t.id === e.target.value);
+                    const content = dom['stop-history-content'];
+                    if (!trade || !trade.stopHistory || trade.stopHistory.length === 0) {
+                        content.innerHTML = '<p class="text-secondary text-center py-4">No stop history for this trade.</p>';
+                        return;
+                    }
+                    content.innerHTML = `
+                        <table class="min-w-full">
+                            <thead><tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Date</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Old Stop</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">New Stop</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Remarks</th>
+                            </tr></thead>
+                            <tbody>
+                                ${trade.stopHistory.map(h => `
+                                    <tr>
+                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatDate(h.date)} ${util.formatTime(h.date)}</td>
+                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatCurrency(h.oldStop)}</td>
+                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatCurrency(h.newStop)}</td>
+                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${h.remarks || 'N/A'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                };
+                ui.openModal(dom['stop-history-modal']);
             }
         };
 
