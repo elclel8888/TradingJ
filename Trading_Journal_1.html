@@ -29,7 +29,7 @@
             font-size: 16px;
             line-height: 1.6;
         }
-        .themed-bg, .stat-card, .modal-content {
+        .themed-bg, .stat-card, .modal-content, .alert-modal-content {
              background-color: var(--bg-secondary);
              border: 1px solid var(--border-color);
         }
@@ -396,7 +396,7 @@
     <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ Weekly Performance Summary</h2>
-            <div id="summary-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
+            <div id="summary-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-summary" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn ml-2 bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -407,7 +407,7 @@
     <div id="stats-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">Advanced Statistics</h2>
-            <div id="stats-content" class="prose dark:prose-invert max-w-none space-y-4"></div>
+            <div id="stats-content" class="prose max-w-none space-y-4"></div>
             <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
         </div>
     </div>
@@ -415,7 +415,7 @@
     <div id="portfolio-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📈 Current Portfolio Analysis</h2>
-            <div id="portfolio-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
+            <div id="portfolio-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
                 <button type="button" id="btn-copy-portfolio" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn ml-2 btn-primary text-white py-2 px-4 rounded-md">Close</button>
@@ -426,7 +426,7 @@
     <div id="holdings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">📄 Trade History Description</h2>
-            <div id="holdings-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
+            <div id="holdings-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-between items-center">
                 <button type="button" id="btn-copy-holdings" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn bg-slate-500 text-white py-2 px-4 rounded-md">Close</button>
@@ -437,7 +437,7 @@
     <div id="ai-trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-4">✨ AI Trade Analysis</h2>
-            <div id="ai-trade-content" class="prose dark:prose-invert max-w-none space-y-4 min-h-[100px]"></div>
+            <div id="ai-trade-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end space-x-3">
                  <button type="button" id="btn-copy-ai-trade" class="btn bg-slate-200 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-300">Copy</button>
                 <button type="button" class="btn-cancel btn btn-primary text-white py-2 px-4 rounded-md">Close</button>
@@ -809,9 +809,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.renderAllocationChart();
                 ui.renderNavHistory(); 
             },
-            applyTheme: (theme) => {
-                // This function is kept for potential future re-introduction of themes, but is not actively used.
-                state.settings.theme = theme;
+            applyTheme: () => {
                 Chart.defaults.color = '#878A8C';
                 Chart.defaults.borderColor = '#CCCCCC';
                 ui.renderNavChart();
@@ -1441,8 +1439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cacheDom();
             events.init();
             
-            // Set light theme as default
-            ui.applyTheme('light');
+            ui.applyTheme('light'); // Set light theme by default
 
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
