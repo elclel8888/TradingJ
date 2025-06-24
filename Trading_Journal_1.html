@@ -13,14 +13,13 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f1f5f9; /* slate-100 */
-            --bg-secondary: #ffffff; /* white */
-            --text-primary: #1e293b; /* slate-800 */
-            --text-secondary: #64748b; /* slate-500 */
-            --border-color: #e2e8f0; /* slate-200 */
+            --bg-primary: #DAE0E6;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A1A1B;
+            --text-secondary: #878A8C;
+            --border-color: #CCCCCC;
             --accent-primary: #0079D3;
             --accent-secondary: #FF4500;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         body { 
@@ -28,19 +27,18 @@
             background-color: var(--bg-primary); 
             color: var(--text-primary);
             font-size: 16px;
-            line-height: 1.7;
+            line-height: 1.6;
         }
         .themed-bg, .stat-card, .modal-content, .alert-modal-content {
              background-color: var(--bg-secondary);
-             box-shadow: var(--shadow);
+             border: 1px solid var(--border-color);
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
         .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
         .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-primary); }
         .btn { transition: all 0.2s ease-in-out; }
-        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
-        .btn:active { transform: translateY(0); }
+        .btn:hover { opacity: 0.9; }
         .btn-primary { background-color: var(--accent-primary); color: white; }
         .btn-secondary { background-color: var(--accent-secondary); color: white; }
         
@@ -287,6 +285,10 @@
             <form id="stop-form">
                  <div class="space-y-4">
                     <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-secondary">Current Trailing Stop</label>
+                        <p id="current-trailing-stop" class="mt-1 text-lg font-semibold">N/A</p>
+                    </div>
                     <div><label for="new-stop" class="block text-sm font-medium text-secondary">New Trailing Stop</label><input type="number" step="any" id="new-stop" required class="mt-1 block w-full input"></div>
                     <div><label for="stop-remarks" class="block text-sm font-medium text-secondary">Remarks</label><textarea id="stop-remarks" rows="2" class="mt-1 block w-full input"></textarea></div>
                 </div>
@@ -536,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'position', 'initial-stop', 'sector', 'tags', 'emotional-state', 'psychology-notes', 
                 'btn-find-sector', 'btn-analyze-trade',
                 'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price', 'exit-remarks',
-                'stop-modal', 'stop-form', 'stop-select', 'new-stop', 'stop-remarks',
+                'stop-modal', 'stop-form', 'stop-select', 'new-stop', 'stop-remarks', 'current-trailing-stop',
                 'stop-history-modal', 'stop-history-select', 'stop-history-content',
                 'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
                 'provider-modal', 'provider-form', 'alphavantage-key', 
@@ -1043,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
             init: () => {
                 dom['btn-add-trade'].onclick = events.handleAddTradeClick;
                 dom['btn-exit-trade'].onclick = () => { ui.populateOpenTradesDropdown('exit-select'); ui.openModal(dom['exit-modal']); };
-                dom['btn-update-stop'].onclick = () => { ui.populateOpenTradesDropdown('stop-select'); ui.openModal(dom['stop-modal']); };
+                dom['btn-update-stop'].onclick = () => { ui.populateOpenTradesDropdown('stop-select'); dom['current-trailing-stop'].textContent = 'N/A'; dom['new-stop'].value = ''; dom['stop-remarks'].value = ''; ui.openModal(dom['stop-modal']); };
                 dom['btn-settings'].onclick = () => {
                     dom['set-capital'].value = state.settings.initialCapital;
                     dom['set-cash'].value = state.settings.currentCash;
@@ -1102,6 +1104,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['btn-copy-portfolio'].onclick = () => util.copyToClipboard(dom['portfolio-content'].innerText);
                 dom['btn-copy-holdings'].onclick = () => util.copyToClipboard(dom['holdings-content'].innerText);
                 dom['btn-copy-ai-trade'].onclick = () => util.copyToClipboard(dom['ai-trade-content'].innerText);
+                dom['stop-select'].onchange = events.handleStopSelectChange;
+            },
+            handleStopSelectChange: (e) => {
+                const tradeId = e.target.value;
+                if (!tradeId) {
+                    dom['current-trailing-stop'].textContent = 'N/A';
+                    return;
+                }
+                const trade = state.trades.find(t => t.id === tradeId);
+                if (trade) {
+                    const currentStop = trade.trailingStop || trade.initialStop;
+                    dom['current-trailing-stop'].textContent = util.formatCurrency(currentStop);
+                }
             },
             handleCloudPromptTabClick: (e) => {
                 if(e.target.tagName !== 'BUTTON') return;
@@ -1512,7 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cacheDom();
             events.init();
             
-            ui.applyTheme('light'); // Set light theme by default
+            ui.applyTheme(); 
 
             if (state.navHistory.length === 0 && state.settings.initialCapital) {
                 const d = new Date();
