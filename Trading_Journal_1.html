@@ -104,8 +104,8 @@
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-2xl font-bold mt-1">0.00R</p></div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-2xl font-bold mt-1">0.00R</p></div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Realized P/L</h3><p id="realized-pl" class="text-2xl font-bold mt-1">$0.00</p></div>
-                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-2xl font-bold mt-1">0%</p></div>
-                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-2xl font-bold mt-1">0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Win Rate</h3><p id="win-rate" class="text-2xl font-semibold mt-1">0%</p></div>
+                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
                 </section>
 
                 <!-- NAV Chart -->
@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                ui.applyTheme(state.settings.theme || 'light');
+                ui.applyTheme();
                 ui.render();
                 util.showAlert('Data loaded successfully!');
             } catch (err) { 
@@ -1395,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const allTrades = state.trades;
                 const currentCash = util.formatCurrency(state.settings.currentCash);
-                let historyText = `The current cash balance is ${currentCash}. `;
+                let historyText = `**Current Cash Balance:** ${currentCash}\n\n---\n\n`;
 
                 if (!allTrades.length) {
                     historyText += "There is no trade history to describe.";
@@ -1404,16 +1404,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         const metrics = calc.getTradeMetrics(t);
                         const pl = t.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
                         const r = t.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                        let exitInfo = `The current price is ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}.`;
+                        let tradeDescription = `**Ticker: ${t.ticker}**\n`;
+                        tradeDescription += `- Status: ${t.status}\n`;
+                        tradeDescription += `- Entry: ${util.formatDate(t.entryDate)} at ${util.formatCurrency(t.entryPrice)}\n`;
+                        tradeDescription += `- Position Size: ${t.position}\n`;
+                        tradeDescription += `- Initial Stop: ${util.formatCurrency(t.initialStop)}\n`;
+
                         if (t.status === 'Closed') {
-                            exitInfo = `The exit was on ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}. My exit remarks were: '${t.exitRemarks || 'None'}'. `;
+                            tradeDescription += `- Exit: ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}\n`;
+                            if(t.exitRemarks) tradeDescription += `- Exit Remarks: ${t.exitRemarks}\n`;
+                        } else {
+                             tradeDescription += `- Current Price: ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}\n`;
                         }
 
-                        return `For ticker ${t.ticker}, the trade status is ${t.status}. Entry was on ${util.formatDate(t.entryDate)} at a price of ${util.formatCurrency(t.entryPrice)} with a position size of ${t.position}. The initial stop was ${util.formatCurrency(t.initialStop)}. ` +
-                            (t.trailingStop ? `The trailing stop is currently ${util.formatCurrency(t.trailingStop)}. ` : '') +
-                            exitInfo +
-                            `The final P/L is ${util.formatCurrency(pl)}, which is ${r.toFixed(2)}R. My emotional state was ${t.emotionalState || 'not recorded'}, and my notes were: '${t.psychologyNotes || 'None'}'.`;
-                    }).join(' ');
+                        if (t.trailingStop) {
+                            tradeDescription += `- Current Trailing Stop: ${util.formatCurrency(t.trailingStop)}\n`;
+                            if (t.stopHistory && t.stopHistory.length > 0) {
+                                const lastStopUpdate = t.stopHistory[t.stopHistory.length - 1];
+                                if (lastStopUpdate.remarks) {
+                                    tradeDescription += `- Last Stop Update Remark: "${lastStopUpdate.remarks}"\n`;
+                                }
+                            }
+                        }
+                        
+                        tradeDescription += `- P/L: ${util.formatCurrency(pl)} (${r.toFixed(2)}R)\n`;
+                        tradeDescription += `- Psychology: ${t.emotionalState || 'not recorded'} - "${t.psychologyNotes || 'None'}"\n`;
+                        
+                        return tradeDescription;
+                    }).join('\n---\n\n');
                 }
 
                 const systemPrompt = "You are a helpful financial analyst AI.";
@@ -1499,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     content.innerHTML = `
                         <table class="min-w-full">
-                            <thead><tr>
+                            <thead class="themed-bg"><tr>
                                 <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Date</th>
                                 <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Old Stop</th>
                                 <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">New Stop</th>
