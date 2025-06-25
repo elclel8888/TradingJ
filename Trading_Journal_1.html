@@ -159,7 +159,7 @@
                 </section>
                 
                 <section class="themed-bg p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold mb-4">Actions</h2>
+                    <h2 class="text-xl font-bold mb-4">Actions</h2>
                     <div class="space-y-4">
                         <button id="btn-add-trade" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Add New Trade</button>
                         <button id="btn-update-stop" class="btn w-full btn-primary py-2.5 px-4 rounded-md font-semibold">Update Trailing Stop</button>
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // --- API ---
         const api = {
-            callCloudLlm: async (systemPrompt, userPrompt, targetElId) => {
+            callCloudLlm: async (systemPrompt, userPrompt) => {
                  const cloudConfigs = state.settings.cloudApiConfigs;
                 if (!cloudConfigs.length) {
                     return `Error: No Cloud APIs configured.`;
@@ -1025,10 +1025,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const s = calc.getAdvancedStats();
                 dom['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
                     `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600 dark:text-green-400':'text-red-600 dark:text-red-400'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
+                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
                         <div class="themed-bg p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
-                        <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-green-800 dark:text-green-300"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
-                        <div class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-red-800 dark:text-red-300"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
+                        <div class="bg-green-100 p-4 rounded-lg text-green-800"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
+                        <div class="bg-red-100 p-4 rounded-lg text-red-800"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
                         <div class="themed-bg p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
                     </div>`;
                 ui.openModal(dom['stats-modal']);
@@ -1386,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const systemPrompt = "You are a helpful financial analyst AI.";
                 const userPrompt = state.settings.promptCloudWeeklySummary.replace('{{DATA}}', dataString);
                 
-                const result = await api.callCloudLlm(systemPrompt, userPrompt, 'summary-content');
+                const result = await api.callCloudLlm(systemPrompt, userPrompt);
                 dom['summary-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
             },
             handleDescribeHoldings: async () => {
@@ -1436,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const systemPrompt = "You are a helpful financial analyst AI.";
                 const userPrompt = state.settings.promptCloudDescribeHoldings.replace('{{DATA}}', historyText);
-                const result = await api.callCloudLlm(systemPrompt, userPrompt, 'holdings-content');
+                const result = await api.callCloudLlm(systemPrompt, userPrompt);
                 dom['holdings-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
 
             },
@@ -1459,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const systemPrompt = "You are a helpful financial analyst AI.";
                 const userPrompt = state.settings.promptCloudPortfolioAnalysis.replace('{{DATA}}', dataString);
                 
-                const result = await api.callCloudLlm(systemPrompt, userPrompt, 'portfolio-content');
+                const result = await api.callCloudLlm(systemPrompt, userPrompt);
                 dom['portfolio-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
             },
             handleAnalyzeTrade: async () => {
@@ -1479,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                .replace('{{NOTES}}', notes);
 
                 const systemPrompt = "You are a helpful financial analyst AI.";
-                const result = await api.callCloudLlm(systemPrompt, userPrompt, 'ai-trade-content');
+                const result = await api.callCloudLlm(systemPrompt, userPrompt);
                 dom['ai-trade-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
             },
             handleFindSector: async () => {
@@ -1489,8 +1489,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const systemPrompt = "You are a helpful financial analyst AI.";
                 const userPrompt = state.settings.promptCloudFindSector.replace('{{TICKER}}', ticker);
-                const result = await api.callCloudLlm(systemPrompt);
-
+                const result = await api.callCloudLlm(systemPrompt, userPrompt);
+                
                 if (result && !result.startsWith('Error:')) {
                     const sector = result.trim().replace(/\.$/, '');
                     dom.sector.value = sector;
