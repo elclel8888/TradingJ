@@ -744,11 +744,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { initialCapital, riskPerTradePercentage } = state.settings;
                 const accountRValue = initialCapital * (riskPerTradePercentage / 100);
                 if (accountRValue <= 0) return 0;
-                let riskInDollars = 0;
-                if (trade.trailingStop && trade.currentPrice > 0 && trade.position > 0) {
-                    riskInDollars = (trade.currentPrice - trade.trailingStop) * trade.position;
-                    return riskInDollars / accountRValue;
-                } else { return calc.getTradeMetrics(trade).initialR; }
+                
+                // Determine the active stop loss price. Use trailing stop if available, otherwise initial stop.
+                const activeStop = trade.trailingStop || trade.initialStop;
+
+                // If for some reason there is no stop, there is no quantifiable risk for this calculation.
+                if (!activeStop || !trade.entryPrice || !trade.position) return 0;
+
+                // Calculate risk in dollars based on entry price vs the active stop.
+                // This correctly calculates the potential loss (or locked-in gain) if the stop is hit.
+                // A negative result indicates a locked-in profit.
+                const riskInDollars = (trade.entryPrice - activeStop) * trade.position;
+                
+                // Return the risk as an R-multiple.
+                return riskInDollars / accountRValue;
             },
             getRiskMetrics: () => {
                 const openValue = state.trades.filter(t => t.status === 'Open').reduce((s, t) => s + ((t.currentPrice || t.entryPrice) * t.position), 0);
@@ -873,8 +882,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom['current-cash'].textContent = util.formatCurrency(state.settings.currentCash);
                 dom['realized-pl'].textContent = util.formatCurrency(realizedPL);
                 dom['realized-pl'].classList.toggle('text-red-600', realizedPL < 0);
+                dom['realized-pl'].classList.toggle('text-green-600', realizedPL >= 0);
                 dom['unrealized-pl'].textContent = util.formatCurrency(unrealizedPL);
                 dom['unrealized-pl'].classList.toggle('text-red-600', unrealizedPL < 0);
+                 dom['unrealized-pl'].classList.toggle('text-green-600', unrealizedPL >= 0);
                 dom['total-open-r'].textContent = `${totalOpenPL_R.toFixed(2)}R`;
                 dom['total-open-risk-card'].textContent = `${totalOpenRisk_R.toFixed(2)}R`;
                 dom['win-rate'].textContent = `${(closed.length ? (wins / closed.length) * 100 : 0).toFixed(1)}%`;
