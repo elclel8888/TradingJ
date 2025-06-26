@@ -99,7 +99,13 @@
                 <!-- Stat Cards Grid -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="stat-card p-5 rounded-lg sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-3xl font-bold mt-1">$0.00</p></div>
-                    <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Current Cash</h3><p id="current-cash" class="text-2xl font-bold mt-1">$0.00</p></div>
+                    <div class="stat-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-secondary">Current Cash</h3>
+                        <div class="flex items-baseline justify-between">
+                             <p id="current-cash" class="text-2xl font-bold mt-1">$0.00</p>
+                             <span id="cash-percentage" class="text-sm font-semibold text-secondary ml-2">0%</span>
+                        </div>
+                    </div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-2xl font-bold mt-1">$0.00</p></div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open P/L (R)</h3><p id="total-open-r" class="text-2xl font-bold mt-1">0.00R</p></div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Total Open Risk (R)</h3><p id="total-open-risk-card" class="text-2xl font-bold mt-1">0.00R</p></div>
@@ -200,11 +206,13 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryPrice">Entry Price</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="currentPrice">Current Price</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="position">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">% of Assets</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialStop">Initial Stop</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialR">Initial Risk (Acct. R)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialR">Initial Risk (R)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="trailingStop">Trailing Stop</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Current Risk (R)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plDollars">P/L $</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plR">P/L (Acct. R)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plR">P/L (R)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="status">Status</th>
                         </tr>
                     </thead>
@@ -526,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dom = {};
         const cacheDom = () => {
             const ids = [
-                'total-assets', 'current-cash', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
+                'total-assets', 'current-cash', 'cash-percentage', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
                 'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
                 'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-view-stop-history', 'btn-exit-trade', 'btn-refresh', 
                 'btn-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
@@ -745,18 +753,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const accountRValue = initialCapital * (riskPerTradePercentage / 100);
                 if (accountRValue <= 0) return 0;
                 
-                // Determine the active stop loss price. Use trailing stop if available, otherwise initial stop.
                 const activeStop = trade.trailingStop || trade.initialStop;
-
-                // If for some reason there is no stop, there is no quantifiable risk for this calculation.
                 if (!activeStop || !trade.entryPrice || !trade.position) return 0;
-
-                // Calculate risk in dollars based on entry price vs the active stop.
-                // This correctly calculates the potential loss (or locked-in gain) if the stop is hit.
-                // A negative result indicates a locked-in profit.
                 const riskInDollars = (trade.entryPrice - activeStop) * trade.position;
-                
-                // Return the risk as an R-multiple.
                 return riskInDollars / accountRValue;
             },
             getRiskMetrics: () => {
@@ -813,7 +812,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (data.settings) {
-                    // Merge settings, preserving existing if not in imported data
                     for (const key in state.settings) {
                         if (data.settings[key] !== undefined) {
                             state.settings[key] = data.settings[key];
@@ -833,17 +831,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- UI ---
         const ui = {
             render: () => { 
-                ui.updateDashboard(); 
-                ui.renderTrades(); 
+                const riskMetrics = calc.getRiskMetrics();
+                ui.updateDashboard(riskMetrics); 
+                ui.renderTrades(riskMetrics.nav); 
                 ui.renderNavChart(); 
-                ui.renderAllocationChart();
+                ui.renderAllocationChart(riskMetrics.nav);
                 ui.renderNavHistory(); 
             },
             applyTheme: () => {
                 Chart.defaults.color = '#878A8C';
                 Chart.defaults.borderColor = '#CCCCCC';
                 ui.renderNavChart();
-                ui.renderAllocationChart();
             },
             openModal: (el) => { el.classList.remove('hidden'); setTimeout(() => el.classList.remove('opacity-0'), 10); },
             closeModal: (el) => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); },
@@ -857,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.disabled = false;
                 }
             },
-            updateDashboard: () => {
+            updateDashboard: (riskMetrics) => {
                 let realizedPL = 0, unrealizedPL = 0, totalOpenPL_R = 0, totalOpenRisk_R = 0, wins = 0, totalGains = 0, totalLossesAbs = 0;
                 const closed = state.trades.filter(t => t.status === 'Closed');
                 
@@ -874,18 +872,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                const riskMetrics = calc.getRiskMetrics();
                 const riskZone = calc.getRiskZone(totalOpenRisk_R);
                 ui.renderRiskDashboard(riskMetrics, totalOpenRisk_R, riskZone);
                 
                 dom['total-assets'].textContent = util.formatCurrency(riskMetrics.nav);
                 dom['current-cash'].textContent = util.formatCurrency(state.settings.currentCash);
+                const cashPercentage = riskMetrics.nav > 0 ? (state.settings.currentCash / riskMetrics.nav) * 100 : 0;
+                dom['cash-percentage'].textContent = `${cashPercentage.toFixed(1)}%`;
+
                 dom['realized-pl'].textContent = util.formatCurrency(realizedPL);
                 dom['realized-pl'].classList.toggle('text-red-600', realizedPL < 0);
                 dom['realized-pl'].classList.toggle('text-green-600', realizedPL >= 0);
                 dom['unrealized-pl'].textContent = util.formatCurrency(unrealizedPL);
                 dom['unrealized-pl'].classList.toggle('text-red-600', unrealizedPL < 0);
-                 dom['unrealized-pl'].classList.toggle('text-green-600', unrealizedPL >= 0);
+                dom['unrealized-pl'].classList.toggle('text-green-600', unrealizedPL >= 0);
                 dom['total-open-r'].textContent = `${totalOpenPL_R.toFixed(2)}R`;
                 dom['total-open-risk-card'].textContent = `${totalOpenRisk_R.toFixed(2)}R`;
                 dom['win-rate'].textContent = `${(closed.length ? (wins / closed.length) * 100 : 0).toFixed(1)}%`;
@@ -903,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
                 else zoneEl.classList.add('bg-red-100', 'text-red-800');
             },
-            renderTrades: () => {
+            renderTrades: (totalNav) => {
                 const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
                 const { key, dir } = state.sort;
                 tradesWithMetrics.sort((a, b) => {
@@ -926,21 +926,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     const r = trade.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
                     const plClass = pl >= 0 ? 'text-green-600' : 'text-red-600';
                     const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
+                    const currentRiskRValue = calc.getCurrentRiskR(trade);
+                    const currentRiskR = trade.status === 'Open' ? currentRiskRValue.toFixed(2) + 'R' : 'N/A';
+                    const riskRClass = trade.status === 'Open' && currentRiskRValue < 0 ? 'text-green-600' : 'text-secondary';
+                    const positionValue = (trade.currentPrice || trade.entryPrice) * trade.position;
+                    const percentOfAssets = (trade.status === 'Open' && totalNav > 0) ? `${(positionValue / totalNav * 100).toFixed(2)}%` : 'N/A';
+
                     return `<tr class="hover:bg-slate-50 cursor-pointer" data-id="${trade.id}">
                             <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
                             <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatDate(trade.entryDate)}</td>
                             <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatCurrency(trade.entryPrice)}</td>
                             <td data-label="Current Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.currentPrice ? util.formatCurrency(trade.currentPrice) : 'N/A'}</td>
                             <td data-label="Position" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.position || 'N/A'}</td>
+                            <td data-label="% of Assets" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${percentOfAssets}</td>
                             <td data-label="Initial Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.initialStop ? util.formatCurrency(trade.initialStop) : 'N/A'}</td>
-                            <td data-label="Initial Risk (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${metrics.initialR.toFixed(2)}R</td>
+                            <td data-label="Initial Risk (R)" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${metrics.initialR.toFixed(2)}R</td>
                             <td data-label="Trailing Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.trailingStop ? util.formatCurrency(trade.trailingStop) : 'N/A'}</td>
+                            <td data-label="Current Risk (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${riskRClass}">${currentRiskR}</td>
                             <td data-label="P/L $" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${util.formatCurrency(pl)}</td>
-                            <td data-label="P/L (Acct. R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${r.toFixed(2)}R</td>
+                            <td data-label="P/L (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${r.toFixed(2)}R</td>
                             <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${trade.status}</span></td>
                         </tr>`;
                 }).join('');
-                if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="11" class="text-center py-8 text-secondary">No trades to display.</td></tr>`;
+                if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="13" class="text-center py-8 text-secondary">No trades to display.</td></tr>`;
             },
             updateSortIndicators: () => {
                 dom['trades-head'].querySelectorAll('th.sortable').forEach(th => {
@@ -958,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' }, grid: { color: 'rgba(204, 204, 204, 0.1)' } }, y: { ticks: { callback: v => util.formatCurrency(v) }, grid: { color: 'rgba(204, 204, 204, 0.1)'} } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
                 });
             },
-            renderAllocationChart: () => {
+            renderAllocationChart: (totalNav) => {
                 const canvas = dom['allocation-chart'];
                 const placeholder = dom['allocation-placeholder'];
                 if (state.allocationChart) { state.allocationChart.destroy(); }
@@ -971,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, {});
                 if (state.settings.currentCash > 0) { allocation['Cash'] = state.settings.currentCash; }
                 const labels = Object.keys(allocation);
-                if (labels.length === 0) {
+                if (labels.length === 0 || totalNav <= 0) {
                     canvas.style.display = 'none';
                     placeholder.textContent = 'No assets to display.';
                     placeholder.style.display = 'block';
@@ -981,7 +989,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 placeholder.style.display = 'none';
                 const ctx = canvas.getContext('2d');
                 const data = Object.values(allocation);
-                state.allocationChart = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ label: 'Portfolio Allocation', data: data, backgroundColor: ['#0079D3', '#FF4500', '#4856a3', '#ffb000', '#7e53c1', '#00a368', '#ff8717', '#a3a3a3'], borderColor: 'var(--bg-secondary)', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += util.formatCurrency(context.parsed); } return label; } } } } } });
+                state.allocationChart = new Chart(ctx, { 
+                    type: 'pie', 
+                    data: { 
+                        labels: labels, 
+                        datasets: [{ 
+                            label: 'Portfolio Allocation', 
+                            data: data, 
+                            backgroundColor: ['#0079D3', '#FF4500', '#4856a3', '#ffb000', '#7e53c1', '#00a368', '#ff8717', '#a3a3a3'], 
+                            borderColor: 'var(--bg-secondary)', 
+                            borderWidth: 2 
+                        }] 
+                    }, 
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    boxWidth: 12, 
+                                    padding: 15,
+                                    generateLabels: (chart) => {
+                                        const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                        originalLabels.forEach(label => {
+                                            const value = chart.data.datasets[0].data[label.index];
+                                            const percentage = totalNav > 0 ? (value / totalNav * 100) : 0;
+                                            label.text = `${chart.data.labels[label.index]}: ${percentage.toFixed(2)}%`;
+                                        });
+                                        return originalLabels;
+                                    }
+                                } 
+                            }, 
+                            tooltip: { 
+                                callbacks: { 
+                                    label: function(context) { 
+                                        let label = context.label || '';
+                                        if (label) { label += ': '; } 
+                                        if (context.parsed !== null) { 
+                                            const value = context.parsed;
+                                            const percentage = totalNav > 0 ? (value / totalNav * 100) : 0;
+                                            label += `${util.formatCurrency(value)} (${percentage.toFixed(2)}%)`; 
+                                        } 
+                                        return label; 
+                                    } 
+                                } 
+                            } 
+                        } 
+                    } 
+                });
             },
             renderNavHistory: () => {
                 const container = dom['nav-history-container'];
@@ -1353,7 +1409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const key = th.dataset.sort;
                     if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
                     else { state.sort.key = key; state.sort.dir = 'desc'; }
-                    ui.renderTrades();
+                    ui.render();
                 }
             },
             handleEditTrade: (e) => {
