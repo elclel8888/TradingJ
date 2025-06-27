@@ -1071,11 +1071,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderWidth: 2
                 }]
             };
+
+            const isMobile = window.innerWidth < 768;
+
             const options = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
+                        display: !isMobile,
                         position: 'bottom',
                         labels: {
                             generateLabels: (chart) => {
