@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Trading Journal</title>
+    <title>Modular Trading Journal - Revised</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.umd.min.js"></script>
@@ -60,20 +60,39 @@
             background-color: var(--bg-primary);
             border-bottom: 2px solid var(--border-color);
         }
-        #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr {
+        #trades-table tbody tr.trade-row {
+            border-bottom: 1px solid var(--border-color);
+        }
+         #trades-table tbody tr.trade-details-row {
+            display: none;
+        }
+        #trades-table tbody tr.trade-details-row.is-visible {
+            display: table-row;
+        }
+        .details-cell {
+            padding: 1rem;
+            background-color: #f7fafc;
+        }
+        #nav-history-table tbody tr, #cloud-api-table tbody tr {
             border-bottom: 1px solid var(--border-color);
         }
         #trades-table tbody tr:last-child, #nav-history-table tbody tr:last-child, #cloud-api-table tbody tr:last-child {
             border-bottom: none;
         }
 
-        /* Responsive Table */
+        .sortable-header { cursor: pointer; }
+        .sortable-header:hover { background-color: #e2e8f0; }
+        .sort-indicator { display: inline-block; width: 0; height: 0; margin-left: 5px; vertical-align: middle; transition: transform 0.2s; }
+        .sort-asc .sort-indicator { border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 4px solid currentColor; }
+        .sort-desc .sort-indicator { border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid currentColor; }
+
         @media (max-width: 1023px) {
             #trades-table thead, #nav-history-table thead, #cloud-api-table thead { display: none; }
             #trades-table, #trades-table tbody, #trades-table tr,
             #nav-history-table, #nav-history-table tbody, #nav-history-table tr,
             #cloud-api-table, #cloud-api-table tbody, #cloud-api-table tr { display: block; width: 100%; }
-            #trades-table tbody tr, #nav-history-table tbody tr, #cloud-api-table tbody tr { margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; background-color: var(--bg-secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; }
+            #trades-table tbody tr.trade-row, #nav-history-table tbody tr, #cloud-api-table tbody tr { margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1rem; background-color: var(--bg-secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; }
+            #trades-table tbody tr.trade-details-row { margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 0; }
             #trades-table tbody td, #nav-history-table tbody td, #cloud-api-table tbody td { display: flex; justify-content: space-between; align-items: center; text-align: right; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); }
             #trades-table tbody td:last-child, #nav-history-table tbody td:last-child, #cloud-api-table tbody td:last-child { border-bottom: none; }
             #trades-table tbody td::before, #nav-history-table tbody td::before, #cloud-api-table tbody td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: var(--text-secondary); }
@@ -96,14 +115,13 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-8">
-                <!-- Stat Cards Grid -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="stat-card p-5 rounded-lg sm:col-span-2"><h3 class="text-sm font-medium text-secondary">Total Assets</h3><p id="total-assets" class="text-3xl font-bold mt-1">$0.00</p></div>
                     <div class="stat-card p-5 rounded-lg">
                         <h3 class="text-sm font-medium text-secondary">Current Cash</h3>
-                        <div class="flex items-baseline justify-between">
-                             <p id="current-cash" class="text-2xl font-bold mt-1">$0.00</p>
-                             <span id="cash-percentage" class="text-sm font-semibold text-secondary ml-2">0%</span>
+                        <div class="flex items-baseline justify-between flex-wrap">
+                            <p id="current-cash" class="text-2xl font-bold mt-1">$0.00</p>
+                            <span id="cash-percentage" class="text-sm font-semibold text-secondary ml-2">0%</span>
                         </div>
                     </div>
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Unrealized P/L</h3><p id="unrealized-pl" class="text-2xl font-bold mt-1">$0.00</p></div>
@@ -114,16 +132,13 @@
                     <div class="stat-card p-5 rounded-lg"><h3 class="text-sm font-medium text-secondary">Profit Factor</h3><p id="profit-factor" class="text-xl font-semibold mt-1">0.00</p></div>
                 </section>
 
-                <!-- NAV Chart -->
                 <section class="themed-bg p-6 rounded-lg h-80 sm:h-96">
                     <h2 class="text-2xl font-bold mb-4">Net Asset Value (NAV)</h2>
                     <canvas id="nav-chart"></canvas>
                 </section>
             </div>
 
-            <!-- Side Column -->
             <aside class="space-y-8">
-                 <!-- Portfolio Allocation Chart -->
                  <section id="portfolio-allocation-section" class="themed-bg p-6 rounded-lg">
                     <h2 class="text-2xl font-bold mb-4">Portfolio Allocation</h2>
                     <div id="allocation-chart-container" class="h-64 flex items-center justify-center">
@@ -131,8 +146,7 @@
                         <p id="allocation-placeholder" class="text-slate-400 text-center hidden"></p>
                     </div>
                 </section>
-                 <!-- Risk Exposure Dashboard -->
-                <section id="risk-exposure-dashboard" class="themed-bg p-6 rounded-lg">
+                 <section id="risk-exposure-dashboard" class="themed-bg p-6 rounded-lg">
                     <h2 class="text-2xl font-bold mb-4">Risk Exposure</h2>
                     <div class="space-y-4 text-base">
                         <div class="flex justify-between">
@@ -196,24 +210,41 @@
         </div>
 
         <section class="mt-8 themed-bg p-4 md:p-6 rounded-lg shadow">
-             <h2 class="text-2xl font-bold mb-4">Trade History</h2>
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold">Trade History</h2>
+                 <div class="flex items-center space-x-2">
+                     <span class="text-sm font-medium text-secondary">Show Closed</span>
+                     <label for="toggle-closed-trades" class="flex items-center cursor-pointer">
+                         <div class="relative">
+                             <input type="checkbox" id="toggle-closed-trades" class="sr-only">
+                             <div class="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                             <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                         </div>
+                     </label>
+                     <style>
+                         #toggle-closed-trades:checked ~ .dot { transform: translateX(100%); }
+                         #toggle-closed-trades:checked ~ .block { background-color: var(--accent-secondary); }
+                     </style>
+                 </div>
+            </div>
              <div class="overflow-x-auto">
                 <table id="trades-table" class="min-w-full">
                     <thead id="trades-head">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="ticker">Ticker</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryDate">Entry Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="entryPrice">Entry Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="currentPrice">Current Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="position">Position</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">% of Assets</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialStop">Initial Stop</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="initialR">Initial Risk (R)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="trailingStop">Trailing Stop</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Current Risk (R)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plDollars">P/L $</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="plR">P/L (R)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider sortable" data-sort="status">Status</th>
+                            <th data-sort="ticker" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Ticker<span class="sort-indicator"></span></th>
+                            <th data-sort="entryDate" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Entry Date<span class="sort-indicator"></span></th>
+                            <th data-sort="weightedAverageEntry" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Avg. Entry<span class="sort-indicator"></span></th>
+                            <th data-sort="currentPrice" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Current Price<span class="sort-indicator"></span></th>
+                            <th data-sort="currentPositionSize" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Position<span class="sort-indicator"></span></th>
+                            <th data-sort="percentOfAssets" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">% of Assets<span class="sort-indicator"></span></th>
+                            <th data-sort="initialStop" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Initial Stop<span class="sort-indicator"></span></th>
+                            <th data-sort="trailingStop" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Trailing Stop<span class="sort-indicator"></span></th>
+                            <th data-sort="currentRiskR" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Current Risk (R)<span class="sort-indicator"></span></th>
+                            <th data-sort="unrealizedPL" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Unrealized P/L<span class="sort-indicator"></span></th>
+                            <th data-sort="realizedPL" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Realized P/L<span class="sort-indicator"></span></th>
+                            <th data-sort="totalR" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Total P/L (R)<span class="sort-indicator"></span></th>
+                            <th data-sort="status" class="sortable-header px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status<span class="sort-indicator"></span></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="trades-body"></tbody>
@@ -227,7 +258,6 @@
         </section>
     </main>
 
-    <!-- Modals -->
     <div id="trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-bold mb-6">Add New Trade</h2>
@@ -235,12 +265,13 @@
                 <input type="hidden" id="trade-id">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label for="ticker" class="block text-sm font-medium text-secondary">Ticker</label><input type="text" id="ticker" required class="mt-1 block w-full input"></div>
-                    <div><label for="entry-date" class="block text-sm font-medium text-secondary">Entry Date</label><input type="date" id="entry-date" required class="mt-1 block w-full input"></div>
-                    <div><label for="entry-price" class="block text-sm font-medium text-secondary">Entry Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
-                    <div><label for="position" class="block text-sm font-medium text-secondary">Position</label><input type="number" step="any" id="position" required class="mt-1 block w-full input"></div>
+                    <div><label for="entry-date" class="block text-sm font-medium text-secondary">Date</label><input type="date" id="entry-date" required class="mt-1 block w-full input"></div>
+                    <div><label for="entry-price" class="block text-sm font-medium text-secondary">Price</label><input type="number" step="any" id="entry-price" required class="mt-1 block w-full input"></div>
+                    <div><label for="quantity" class="block text-sm font-medium text-secondary">Quantity</label><input type="number" step="any" id="quantity" required class="mt-1 block w-full input"></div>
                     <div class="md:col-span-2"><label for="initial-stop" class="block text-sm font-medium text-secondary">Initial Stop</label><input type="number" step="any" id="initial-stop" required class="mt-1 block w-full input"></div>
                     <div class="md:col-span-2"><label for="sector" class="block text-sm font-medium text-secondary">Sector</label><div class="flex items-center space-x-2 mt-1"><input type="text" id="sector" class="block w-full input"><button type="button" id="btn-find-sector" class="btn bg-teal-100 text-teal-700 py-2 px-3 rounded-md text-sm whitespace-nowrap">✨ Find Sector</button></div></div>
                     <div class="md:col-span-2"><label for="tags" class="block text-sm font-medium text-secondary">Tags (comma-separated)</label><input type="text" id="tags" class="mt-1 block w-full input"></div>
+                    <div class="md:col-span-2"><label for="trade-notes" class="block text-sm font-medium text-secondary">Notes</label><textarea id="trade-notes" rows="2" class="mt-1 block w-full input"></textarea></div>
                 </div>
                 
                 <hr class="my-6" style="border-color: var(--border-color);">
@@ -274,13 +305,15 @@
     
     <div id="exit-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6">Exit Trade</h2>
+            <h2 class="text-2xl font-bold mb-6">Exit Position</h2>
             <form id="exit-form">
                  <div class="space-y-4">
-                    <div><label for="exit-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="exit-select" required class="mt-1 block w-full input"></select></div>
+                    <div><label for="exit-select" class="block text-sm font-medium text-secondary">Select Open Position</label><select id="exit-select" required class="mt-1 block w-full input"></select></div>
+                    <div class="text-sm">Current Position: <span id="exit-current-position" class="font-semibold"></span></div>
                     <div><label for="exit-date" class="block text-sm font-medium text-secondary">Exit Date</label><input type="date" id="exit-date" required class="mt-1 block w-full input"></div>
                     <div><label for="exit-price" class="block text-sm font-medium text-secondary">Exit Price</label><input type="number" step="any" id="exit-price" required class="mt-1 block w-full input"></div>
-                    <div><label for="exit-remarks" class="block text-sm font-medium text-secondary">Exit Remarks</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
+                    <div><label for="exit-quantity" class="block text-sm font-medium text-secondary">Exit Quantity</label><input type="number" step="any" id="exit-quantity" required class="mt-1 block w-full input"></div>
+                    <div><label for="exit-remarks" class="block text-sm font-medium text-secondary">Exit Remarks (Notes)</label><textarea id="exit-remarks" rows="3" class="mt-1 block w-full input"></textarea></div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Cancel</button><button type="submit" class="btn btn-secondary py-2 px-4 rounded-md">Save Exit</button></div>
             </form>
@@ -292,7 +325,7 @@
             <h2 class="text-2xl font-bold mb-6">Update Trailing Stop</h2>
             <form id="stop-form">
                  <div class="space-y-4">
-                    <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Trade</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
+                    <div><label for="stop-select" class="block text-sm font-medium text-secondary">Select Open Position</label><select id="stop-select" required class="mt-1 block w-full input"></select></div>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-secondary">Current Trailing Stop</label>
                         <p id="current-trailing-stop" class="mt-1 text-lg font-semibold">N/A</p>
@@ -496,1138 +529,1228 @@
     </div>
 
 <script>
-// --- APP INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    const App = (() => {
-        // --- STATE ---
-        const state = {
-            trades: [],
-            navHistory: [],
+
+    // =================================================================================
+    // MODULE: State
+    // Manages the application's data and settings.
+    // =================================================================================
+    const State = {
+        trades: [],
+        navHistory: [],
+        settings: {},
+        ui: {
+            showClosedTrades: false,
+            sort: {
+                key: 'totalR',
+                direction: 'desc'
+            }
+        },
+        charts: {
             navChart: null,
-            allocationChart: null,
-            settings: { 
-                initialCapital: 10, 
-                currentCash: 10,
-                highWaterMark: 10,
-                riskPerTradePercentage: 0.8,
-                moderateDrawdownThreshold: 5,
-                highRiskDrawdownThreshold: 10,
-                alphaVantageKey: '',
-                cloudApiConfigs: [
-                    { id: 'cloud-1', name: "API1", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "[EXPRESS] gemini-2.5-pro-preview-06-05" },
-                    { id: 'cloud-2', name: "API2", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "grok-3" },
-                    { id: 'cloud-3', name: "API3", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "grok-3-reasoning" },
-                    { id: 'cloud-4', name: "API4", apiKey: "sk-klfaPYWN1J8EiI2X6ZAssgkbKtgmPXCtoCq0VndFZo7fhFN0", baseUrl: "http://121.62.28.36:3002/v1", model: "gemini-2.5-pro-preview-05-06" },
-                    { id: 'cloud-5', name: "API5", apiKey: "auth0|6814bb514201ed4536f06592", baseUrl: "https://deepseek.erikpsw.works/v1", model: "qwen3-235b-a22b-non-thinking" },
-                    { id: 'cloud-6', name: "API6", apiKey: "sk-7O1ZQWEgyGzFhyQPp2wx2geg2wpjEWojtli60GWdD7mUmgg2", baseUrl: "https://api.sikong.shop/v1", model: "gemini-2.5-pro-preview-05-06" }
-                ],
-                promptCloudWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
-                promptCloudDescribeHoldings: 'Please combine the following sentences into a single, cohesive paragraph without adding any analysis or summary. Present the information in a straightforward, factual manner.\n\nData:\n{{DATA}}',
-                promptCloudPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
-                promptCloudTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.',
-                promptCloudFindSector: 'GICS sector for ticker {{TICKER}}? Respond with only the sector name.'
-            },
-            sort: { key: 'entryDate', dir: 'desc' }
-        };
+            allocationChart: null
+        }
+    };
+    
+    const getDefaultSettings = () => ({
+        initialCapital: 10, 
+        currentCash: 10,
+        highWaterMark: 10,
+        riskPerTradePercentage: 0.8,
+        moderateDrawdownThreshold: 5,
+        highRiskDrawdownThreshold: 10,
+        alphaVantageKey: '',
+        cloudApiConfigs: [
+            { id: 'cloud-1', name: "API1", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "[EXPRESS] gemini-2.5-pro-preview-06-05" },
+            { id: 'cloud-2', name: "API2", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "grok-3" },
+            { id: 'cloud-3', name: "API3", apiKey: "sk-uhSkLuAGsKmqb5GvoQvNu21KHEBfplRBTINcqhzUcunnBdN0", baseUrl: "http://xingkong.yousebaby.com/v1", model: "grok-3-reasoning" },
+            { id: 'cloud-4', name: "API4", apiKey: "sk-klfaPYWN1J8EiI2X6ZAssgkbKtgmPXCtoCq0VndFZo7fhFN0", baseUrl: "http://121.62.28.36:3002/v1", model: "gemini-2.5-pro-preview-05-06" },
+            { id: 'cloud-5', name: "API5", apiKey: "auth0|6814bb514201ed4536f06592", baseUrl: "https://deepseek.erikpsw.works/v1", model: "qwen3-235b-a22b-non-thinking" },
+            { id: 'cloud-6', name: "API6", apiKey: "sk-7O1ZQWEgyGzFhyQPp2wx2geg2wpjEWojtli60GWdD7mUmgg2", baseUrl: "https://api.sikong.shop/v1", model: "gemini-2.5-pro-preview-05-06" }
+        ],
+        promptCloudWeeklySummary: 'Generate a weekly trading performance summary based on this data:\n{{DATA}}\n\nProvide brief, insightful commentary on the performance.',
+        promptCloudDescribeHoldings: 'Based on the following data for open positions, provide a clear, factual summary of the current trade history. For each position, describe the key metrics like position size, entry price, unrealized P/L, and stop levels. Present the output in a readable format, potentially using bullet points for each ticker.\n\nData:\n{{DATA}}',
+        promptCloudPortfolioAnalysis: 'Analyze this open portfolio:\n\n**Overview:**\n{{DATA}}\n\n**Request:**\n1. Analyze concentration risk.\n2. Note strengths/weaknesses.\n3. Pose 1-2 insightful questions for me to consider.',
+        promptCloudTradeAnalysis: 'Analyze this trade setup:\n- Ticker: {{TICKER}}\n- Entry: {{ENTRY}}\n- Stop: {{STOP}}\n- Psychology Notes: "{{NOTES}}"\n\nWhat is a potential rationale and what are the risks? Be concise.',
+        promptCloudFindSector: 'GICS sector for ticker {{TICKER}}? Respond with only the sector name.'
+    });
 
-        // --- DOM ELEMENTS ---
-        const dom = {};
-        const cacheDom = () => {
-            const ids = [
-                'total-assets', 'current-cash', 'cash-percentage', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
-                'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
-                'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-view-stop-history', 'btn-exit-trade', 'btn-refresh', 
-                'btn-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
-                'btn-gen-summary', 'btn-analyze-portfolio', 'btn-describe-holdings', 
-                'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
-                'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk', 'nav-history-container',
-                'trades-table', 'trades-head', 'trades-body', 
-                'trade-modal', 'modal-title', 'trade-form', 'trade-id', 'ticker', 'entry-date', 'entry-price', 
-                'position', 'initial-stop', 'sector', 'tags', 'emotional-state', 'psychology-notes', 
-                'btn-find-sector', 'btn-analyze-trade',
-                'exit-modal', 'exit-form', 'exit-select', 'exit-date', 'exit-price', 'exit-remarks',
-                'stop-modal', 'stop-form', 'stop-select', 'new-stop', 'stop-remarks', 'current-trailing-stop',
-                'stop-history-modal', 'stop-history-select', 'stop-history-content',
-                'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
-                'provider-modal', 'provider-form', 'alphavantage-key', 
-                'cloud-api-modal', 'cloud-api-form', 'cloud-api-id', 'cloud-api-name', 'cloud-api-key', 'cloud-api-base-url', 'cloud-api-model',
-                'cloud-api-list-container', 'cloud-api-table', 'cloud-api-body',
-                'cloud-prompt-modal', 'cloud-prompt-form', 'prompt-cloud-weekly-summary', 'prompt-cloud-describe-holdings', 'prompt-cloud-portfolio-analysis', 'prompt-cloud-trade-analysis', 'prompt-cloud-find-sector',
-                'summary-modal', 'summary-content', 'btn-copy-summary',
-                'stats-modal', 'stats-content',
-                'portfolio-modal', 'portfolio-content', 'btn-copy-portfolio',
-                'holdings-modal', 'holdings-content', 'btn-copy-holdings',
-                'ai-trade-modal', 'ai-trade-content', 'btn-copy-ai-trade',
-                'sector-modal', 'sector-content', 'alert-modal', 'alert-msg', 'alert-ok',
-                'btn-alert-ok', 'alert-confirm', 'btn-confirm-cancel', 'btn-confirm-ok',
-                'cloud-prompt-tabs'
-            ];
-            ids.forEach(id => dom[id] = document.getElementById(id));
-            dom.modalCancelButtons = document.querySelectorAll('.btn-cancel');
-        };
+    // =================================================================================
+    // MODULE: DOM
+    // Caches references to all DOM elements used in the application.
+    // =================================================================================
+    const DOM = {};
+    const cacheDom = () => {
+        const ids = [
+            'total-assets', 'current-cash', 'cash-percentage', 'unrealized-pl', 'total-open-r', 'total-open-risk-card',
+            'realized-pl', 'win-rate', 'profit-factor', 'nav-chart', 'btn-import', 'file-input', 'btn-load-online',
+            'btn-export', 'btn-add-trade', 'btn-update-stop', 'btn-view-stop-history', 'btn-exit-trade', 'btn-refresh', 
+            'btn-settings', 'btn-provider-settings', 'btn-cloud-api-settings', 'btn-cloud-ai-prompt', 'btn-view-stats', 
+            'btn-gen-summary', 'btn-analyze-portfolio', 'btn-describe-holdings', 
+            'allocation-chart', 'allocation-chart-container', 'allocation-placeholder',
+            'high-water-mark', 'current-drawdown', 'risk-zone', 'total-open-risk', 'nav-history-container',
+            'trades-table', 'trades-head', 'trades-body', 'toggle-closed-trades',
+            'trade-modal', 'modal-title', 'trade-form', 'trade-id', 'ticker', 'entry-date', 'entry-price', 
+            'quantity', 'initial-stop', 'sector', 'tags', 'trade-notes', 'emotional-state', 'psychology-notes', 
+            'btn-find-sector', 'btn-analyze-trade',
+            'exit-modal', 'exit-form', 'exit-select', 'exit-current-position', 'exit-date', 'exit-price', 'exit-quantity', 'exit-remarks',
+            'stop-modal', 'stop-form', 'stop-select', 'new-stop', 'stop-remarks', 'current-trailing-stop',
+            'stop-history-modal', 'stop-history-select', 'stop-history-content',
+            'settings-modal', 'settings-form', 'set-capital', 'set-cash', 'set-risk-percent', 'set-moderate-dd', 'set-high-risk-dd',
+            'provider-modal', 'provider-form', 'alphavantage-key', 
+            'cloud-api-modal', 'cloud-api-form', 'cloud-api-id', 'cloud-api-name', 'cloud-api-key', 'cloud-api-base-url', 'cloud-api-model',
+            'cloud-api-list-container', 'cloud-api-table', 'cloud-api-body',
+            'cloud-prompt-modal', 'cloud-prompt-form', 'prompt-cloud-weekly-summary', 'prompt-cloud-describe-holdings', 'prompt-cloud-portfolio-analysis', 'prompt-cloud-trade-analysis', 'prompt-cloud-find-sector',
+            'summary-modal', 'summary-content', 'btn-copy-summary',
+            'stats-modal', 'stats-content',
+            'portfolio-modal', 'portfolio-content', 'btn-copy-portfolio',
+            'holdings-modal', 'holdings-content', 'btn-copy-holdings',
+            'ai-trade-modal', 'ai-trade-content', 'btn-copy-ai-trade',
+            'sector-modal', 'sector-content', 'alert-modal', 'alert-msg', 'alert-ok',
+            'btn-alert-ok', 'alert-confirm', 'btn-confirm-cancel', 'btn-confirm-ok',
+            'cloud-prompt-tabs'
+        ];
+        ids.forEach(id => DOM[id] = document.getElementById(id));
+        DOM.modalCancelButtons = document.querySelectorAll('.btn-cancel');
+    };
 
-        // --- UTILS ---
-        const util = {
-            formatCurrency: (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0),
-            formatDate: (dateStr) => {
-                if (!dateStr) return 'N/A';
-                const d = new Date(dateStr);
-                return new Date(d.getTime() + d.getTimezoneOffset() * 60000).toLocaleDateString('en-CA');
-            },
-            formatTime: (isoString) => {
-                if (!isoString) return '';
-                return new Date(isoString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            },
-            formatDuration: (ms) => {
-                if (ms < 0 || isNaN(ms)) return 'N/A';
-                const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
-                return [d && `${d}d`, h && `${h}h`, m && `${m}m`].filter(Boolean).join(' ') || '0m';
-            },
-            showAlert: (msg, type = 'alert', cb) => {
-                dom['alert-msg'].innerHTML = msg;
-                const okDiv = dom['alert-ok'];
-                const confirmDiv = dom['alert-confirm'];
-                if (type === 'confirm') {
-                    okDiv.classList.add('hidden');
-                    confirmDiv.classList.remove('hidden');
-                    confirmDiv.style.display = 'flex';
-                    dom['btn-confirm-ok'].onclick = () => { util.closeAlert(); cb?.(true); };
-                    dom['btn-confirm-cancel'].onclick = () => { util.closeAlert(); cb?.(false); };
-                } else {
-                    confirmDiv.classList.add('hidden');
-                    okDiv.classList.remove('hidden');
-                    dom['btn-alert-ok'].onclick = () => { util.closeAlert(); cb?.(true); };
-                }
-                dom['alert-modal'].classList.add('visible');
-            },
-            closeAlert: () => dom['alert-modal'].classList.remove('visible'),
-            copyToClipboard: (text, message = 'Copied to clipboard!') => {
-                if (!text) { util.showAlert('Nothing to copy.'); return; }
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-9999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    util.showAlert(message);
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                    util.showAlert('Failed to copy text.');
-                }
-                document.body.removeChild(textArea);
-            },
-            debounce: (func, delay) => {
-                let timeout;
-                return function(...args) {
-                    const context = this;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(context, args), delay);
-                };
+    // =================================================================================
+    // MODULE: Utils
+    // Provides utility and helper functions.
+    // =================================================================================
+    const Utils = {
+        formatCurrency: (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0),
+        formatDate: (dateStr) => {
+            if (!dateStr) return 'N/A';
+            const d = new Date(dateStr);
+            return new Date(d.getTime() + d.getTimezoneOffset() * 60000).toLocaleDateString('en-CA');
+        },
+        formatTime: (isoString) => {
+            if (!isoString) return '';
+            return new Date(isoString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        },
+        formatDuration: (ms) => {
+            if (ms < 0 || isNaN(ms)) return 'N/A';
+            const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+            return [d && `${d}d`, h && `${h}h`, m && `${m}m`].filter(Boolean).join(' ') || '0m';
+        },
+        showAlert: (msg, type = 'alert', cb) => {
+            DOM['alert-msg'].innerHTML = msg;
+            const okDiv = DOM['alert-ok'];
+            const confirmDiv = DOM['alert-confirm'];
+            if (type === 'confirm') {
+                okDiv.classList.add('hidden');
+                confirmDiv.classList.remove('hidden');
+                confirmDiv.style.display = 'flex';
+                DOM['btn-confirm-ok'].onclick = () => { Utils.closeAlert(); cb?.(true); };
+                DOM['btn-confirm-cancel'].onclick = () => { Utils.closeAlert(); cb?.(false); };
+            } else {
+                confirmDiv.classList.add('hidden');
+                okDiv.classList.remove('hidden');
+                DOM['btn-alert-ok'].onclick = () => { Utils.closeAlert(); cb?.(true); };
             }
-        };
-        
-        // --- API ---
-        const api = {
-            callCloudLlm: async (systemPrompt, userPrompt) => {
-                 const cloudConfigs = state.settings.cloudApiConfigs;
-                if (!cloudConfigs.length) {
-                    return `Error: No Cloud APIs configured.`;
-                }
-                
-                let lastError = "No APIs available to try.";
-
-                for (let i = 0; i < cloudConfigs.length; i++) {
-                    const config = cloudConfigs[i]; // Start from API1
-                    console.log(`Trying Cloud API: ${config.name}`);
-
-                    const result = await api.callOpenAICompatibleLlm(systemPrompt, userPrompt, {
-                        name: config.name,
-                        BASE_URL: config.baseUrl,
-                        API_KEY: config.apiKey,
-                        MODEL: config.model
-                    });
-
-                    if (!result.startsWith('Error:')) {
-                        return result; // Success
-                    }
-                    lastError = result; // Store the last error
-                }
-                
-                return `Error: All Cloud APIs failed. Last error: ${lastError}`;
-            },
-            callOpenAICompatibleLlm: async (systemPrompt, userPrompt, apiConfig) => {
-                const apiUrl = `${apiConfig.BASE_URL}/chat/completions`;
-                const payload = {
-                    model: apiConfig.MODEL,
-                    messages: [
-                        { "role": "system", "content": systemPrompt },
-                        { "role": "user", "content": userPrompt }
-                    ],
-                };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiConfig.API_KEY}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorBody = await response.text();
-                        throw new Error(`API Error ${response.status}: ${errorBody}`);
-                    }
-                    
-                    const result = await response.json();
-                    if (result.choices && result.choices.length > 0 && result.choices[0].message) {
-                        return result.choices[0].message.content;
-                    } else {
-                        throw new Error('Invalid response structure from API.');
-                    }
-                } catch (error) {
-                    console.error(`Error with ${apiConfig.name}:`, error);
-                    return `Error: ${error.message}`;
-                }
-            },
-            refreshPrices: async () => {
-                const openTrades = state.trades.filter(t => t.status === 'Open');
-                if (!openTrades.length) return util.showAlert('No open trades to refresh.');
-                if (!state.settings.alphaVantageKey) return util.showAlert('Alpha Vantage API key is not set.');
-                
-                ui.setLoading(dom['btn-refresh'], true, 'Refreshing...');
-                const errorMessages = new Set();
-                for (const trade of openTrades) {
-                    try {
-                        const symbol = trade.ticker.trim();
-                        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${state.settings.alphaVantageKey}`;
-                        const res = await fetch(url);
-                        const data = await res.json();
-                        const price = data?.['Global Quote']?.['05. price'];
-                        if (price) {
-                            trade.currentPrice = parseFloat(price);
-                        } else {
-                            const errorMessage = data.Note || data['Error Message'] || `Could not find price for ${trade.ticker}.`;
-                            errorMessages.add(errorMessage);
-                            console.warn(`Price fetch issue for ${trade.ticker}:`, data);
-                        }
-                    } catch (error) {
-                        console.error(`Error fetching price for ${trade.ticker}:`, error);
-                        errorMessages.add(`Network error for ${trade.ticker}. Check console.`);
-                    }
-                    if (openTrades.indexOf(trade) < openTrades.length - 1) { await new Promise(resolve => setTimeout(resolve, 12000)); }
-                }
-                calc.recordNavPoint(); 
-                ui.render();
-                if (errorMessages.size > 0) { util.showAlert(`Price refresh completed with some issues:<br>- ${Array.from(errorMessages).join('<br>- ')}`); }
-                else { util.showAlert('All prices refreshed successfully!'); }
-                ui.setLoading(dom['btn-refresh'], false);
-            }
-        };
-
-        // --- CALCULATIONS ---
-        const calc = {
-            getTradeMetrics: (trade) => {
-                const { initialCapital, riskPerTradePercentage } = state.settings;
-                const accountRValue = initialCapital * (riskPerTradePercentage / 100);
-                const metrics = { tradeRiskInDollars: 0, initialR: 0, realizedPL: 0, realizedR: 0, unrealizedPL: 0, unrealizedR: 0 };
-                if (!trade.entryPrice || !trade.initialStop || !trade.position) { return metrics; }
-                metrics.tradeRiskInDollars = (trade.entryPrice - trade.initialStop) * trade.position;
-                if (accountRValue > 0) { metrics.initialR = metrics.tradeRiskInDollars / accountRValue; }
-                if (trade.status === 'Open' && trade.currentPrice) {
-                    metrics.unrealizedPL = (trade.currentPrice - trade.entryPrice) * trade.position;
-                    if (accountRValue > 0) metrics.unrealizedR = metrics.unrealizedPL / accountRValue;
-                } else if (trade.status === 'Closed' && trade.exitPrice) {
-                    metrics.realizedPL = (trade.exitPrice - trade.entryPrice) * trade.position;
-                    if (accountRValue > 0) metrics.realizedR = metrics.realizedPL / accountRValue;
-                }
-                return metrics;
-            },
-            getCurrentRiskR: (trade) => {
-                if (trade.status !== 'Open') return 0;
-                const { initialCapital, riskPerTradePercentage } = state.settings;
-                const accountRValue = initialCapital * (riskPerTradePercentage / 100);
-                if (accountRValue <= 0) return 0;
-                
-                const activeStop = trade.trailingStop || trade.initialStop;
-                if (!activeStop || !trade.entryPrice || !trade.position) return 0;
-                const riskInDollars = (trade.entryPrice - activeStop) * trade.position;
-                return riskInDollars / accountRValue;
-            },
-            getRiskMetrics: () => {
-                const openValue = state.trades.filter(t => t.status === 'Open').reduce((s, t) => s + ((t.currentPrice || t.entryPrice) * t.position), 0);
-                const nav = state.settings.currentCash + openValue;
-                state.settings.highWaterMark = Math.max(state.settings.highWaterMark || nav, nav);
-                const drawdownDollars = state.settings.highWaterMark - nav;
-                const drawdownPercent = state.settings.highWaterMark > 0 ? (drawdownDollars / state.settings.highWaterMark) * 100 : 0;
-                return { nav, hwm: state.settings.highWaterMark, drawdownDollars, drawdownPercent };
-            },
-            getRiskZone: (totalOpenRiskR) => {
-                if (totalOpenRiskR > 6) return 'Red';
-                if (totalOpenRiskR > 3) return 'Yellow';
-                return 'Green';
-            },
-            getAdvancedStats: () => {
-                const closed = state.trades.filter(t => t.status === 'Closed');
-                if (!closed.length) return null;
-                const winners = closed.filter(t => calc.getTradeMetrics(t).realizedPL > 0);
-                const losers = closed.filter(t => calc.getTradeMetrics(t).realizedPL <= 0);
-                const winRate = closed.length ? winners.length / closed.length : 0;
-                const totalGains = winners.reduce((s, t) => s + calc.getTradeMetrics(t).realizedPL, 0);
-                const avgWin = winners.length ? totalGains / winners.length : 0;
-                const totalLosses = losers.reduce((s, t) => s + calc.getTradeMetrics(t).realizedPL, 0);
-                const avgLoss = losers.length ? Math.abs(totalLosses / losers.length) : 0;
-                return { total: closed.length, expectancy: (winRate * avgWin) - ((1 - winRate) * avgLoss), winners: winners.length, losers: losers.length, avgWin: avgWin, largestWin: winners.reduce((max, t) => Math.max(max, calc.getTradeMetrics(t).realizedPL), 0), avgLoss: avgLoss, largestLoss: losers.reduce((min, t) => Math.min(min, calc.getTradeMetrics(t).realizedPL), 0), avgWinHold: winners.length ? winners.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / winners.length : 0, avgLossHold: losers.length ? losers.reduce((s, t) => s + (new Date(t.exitDate) - new Date(t.entryDate)), 0) / losers.length : 0, };
-            },
-            recordNavPoint: () => {
-                const { nav } = calc.getRiskMetrics();
-                const now = new Date();
-                const today = now.toISOString().split('T')[0];
-                const timestamp = now.toISOString();
-                const idx = state.navHistory.findIndex(e => e.date === today);
-                if (idx > -1) {
-                    state.navHistory[idx].nav = parseFloat(nav.toFixed(2));
-                    state.navHistory[idx].timestamp = timestamp;
-                } else {
-                    state.navHistory.push({ date: today, nav: parseFloat(nav.toFixed(2)), timestamp: timestamp });
-                }
-                state.navHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
-            }
-        };
-
-        const loadDataIntoState = (data) => {
+            DOM['alert-modal'].classList.add('visible');
+        },
+        closeAlert: () => DOM['alert-modal'].classList.remove('visible'),
+        copyToClipboard: (text, message = 'Copied to clipboard!') => {
+            if (!text) { Utils.showAlert('Nothing to copy.'); return; }
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
             try {
-                if (!data) { throw new Error("Invalid data file"); }
-                
-                if (data.trades) {
-                    state.trades = data.trades;
-                }
-
-                if (data.navHistory) {
-                     state.navHistory = data.navHistory.map(item => ({ ...item, timestamp: item.timestamp || new Date(item.date).toISOString() }));
-                }
-
-                if (data.settings) {
-                    for (const key in state.settings) {
-                        if (data.settings[key] !== undefined) {
-                            state.settings[key] = data.settings[key];
-                        }
-                    }
-                }
-                
-                ui.applyTheme();
-                ui.render();
-                util.showAlert('Data loaded successfully!');
-            } catch (err) { 
-                util.showAlert(`Failed to load data: ${err.message}`); 
-                console.error("Data Load Error:", err);
+                document.execCommand('copy');
+                Utils.showAlert(message);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                Utils.showAlert('Failed to copy text.');
             }
-        };
-
-        // --- UI ---
-        const ui = {
-            render: () => { 
-                const riskMetrics = calc.getRiskMetrics();
-                ui.updateDashboard(riskMetrics); 
-                ui.renderTrades(riskMetrics.nav); 
-                ui.renderNavChart(); 
-                ui.renderAllocationChart(riskMetrics.nav);
-                ui.renderNavHistory(); 
-            },
-            applyTheme: () => {
-                Chart.defaults.color = '#878A8C';
-                Chart.defaults.borderColor = '#CCCCCC';
-                ui.renderNavChart();
-            },
-            openModal: (el) => { el.classList.remove('hidden'); setTimeout(() => el.classList.remove('opacity-0'), 10); },
-            closeModal: (el) => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); },
-            setLoading: (btn, loading, text = '') => {
-                if (loading) {
-                    btn.originalHTML = btn.innerHTML;
-                    btn.innerHTML = `<span class="flex items-center justify-center"><div class="loader-sm"></div><span class="ml-2">${text}</span></span>`;
-                    btn.disabled = true;
-                } else {
-                    if (btn.originalHTML) btn.innerHTML = btn.originalHTML;
-                    btn.disabled = false;
-                }
-            },
-            updateDashboard: (riskMetrics) => {
-                let realizedPL = 0, unrealizedPL = 0, totalOpenPL_R = 0, totalOpenRisk_R = 0, wins = 0, totalGains = 0, totalLossesAbs = 0;
-                const closed = state.trades.filter(t => t.status === 'Closed');
-                
-                state.trades.forEach(t => {
-                    const metrics = calc.getTradeMetrics(t);
-                    if (t.status === 'Open') {
-                        unrealizedPL += metrics.unrealizedPL;
-                        totalOpenPL_R += metrics.unrealizedR;
-                        totalOpenRisk_R += calc.getCurrentRiskR(t);
-                    } else {
-                        realizedPL += metrics.realizedPL;
-                        if (metrics.realizedPL > 0) { wins++; totalGains += metrics.realizedPL; }
-                        else totalLossesAbs += Math.abs(metrics.realizedPL);
-                    }
+            document.body.removeChild(textArea);
+        },
+    };
+    
+    // =================================================================================
+    // MODULE: API
+    // Handles interactions with external APIs like Alpha Vantage and Cloud LLMs.
+    // =================================================================================
+    const API = {
+        callCloudLlm: async (systemPrompt, userPrompt) => {
+            const cloudConfigs = State.settings.cloudApiConfigs;
+            if (!cloudConfigs.length) return `Error: No Cloud APIs configured.`;
+            
+            let lastError = "No APIs available to try.";
+            for (const config of cloudConfigs) {
+                console.log(`Trying Cloud API: ${config.name}`);
+                const result = await API.callOpenAICompatibleLlm(systemPrompt, userPrompt, {
+                    name: config.name,
+                    BASE_URL: config.baseUrl,
+                    API_KEY: config.apiKey,
+                    MODEL: config.model
                 });
-                
-                const riskZone = calc.getRiskZone(totalOpenRisk_R);
-                ui.renderRiskDashboard(riskMetrics, totalOpenRisk_R, riskZone);
-                
-                dom['total-assets'].textContent = util.formatCurrency(riskMetrics.nav);
-                dom['current-cash'].textContent = util.formatCurrency(state.settings.currentCash);
-                const cashPercentage = riskMetrics.nav > 0 ? (state.settings.currentCash / riskMetrics.nav) * 100 : 0;
-                dom['cash-percentage'].textContent = `${cashPercentage.toFixed(1)}%`;
-
-                dom['realized-pl'].textContent = util.formatCurrency(realizedPL);
-                dom['realized-pl'].classList.toggle('text-red-600', realizedPL < 0);
-                dom['realized-pl'].classList.toggle('text-green-600', realizedPL >= 0);
-                dom['unrealized-pl'].textContent = util.formatCurrency(unrealizedPL);
-                dom['unrealized-pl'].classList.toggle('text-red-600', unrealizedPL < 0);
-                dom['unrealized-pl'].classList.toggle('text-green-600', unrealizedPL >= 0);
-                dom['total-open-r'].textContent = `${totalOpenPL_R.toFixed(2)}R`;
-                dom['total-open-risk-card'].textContent = `${totalOpenRisk_R.toFixed(2)}R`;
-                dom['win-rate'].textContent = `${(closed.length ? (wins / closed.length) * 100 : 0).toFixed(1)}%`;
-                dom['profit-factor'].textContent = (totalLossesAbs > 0 ? totalGains / totalLossesAbs : 0).toFixed(2);
-            },
-            renderRiskDashboard: (riskMetrics, totalOpenRiskR, riskZone) => {
-                const { hwm, drawdownDollars, drawdownPercent } = riskMetrics;
-                dom['high-water-mark'].textContent = util.formatCurrency(hwm);
-                dom['current-drawdown'].textContent = `${util.formatCurrency(drawdownDollars)} (${drawdownPercent.toFixed(2)}%)`;
-                dom['total-open-risk'].textContent = `${(totalOpenRiskR || 0).toFixed(2)}R`;
-                const zoneEl = dom['risk-zone'];
-                zoneEl.textContent = riskZone;
-                zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
-                if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800');
-                else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
-                else zoneEl.classList.add('bg-red-100', 'text-red-800');
-            },
-            renderTrades: (totalNav) => {
-                const tradesWithMetrics = state.trades.map(trade => ({ ...trade, metrics: calc.getTradeMetrics(trade) }));
-                const { key, dir } = state.sort;
-                tradesWithMetrics.sort((a, b) => {
-                    const metricsA = a.metrics, metricsB = b.metrics;
-                    let valA, valB;
-                    switch(key) {
-                        case 'plDollars': valA = a.status === 'Closed' ? metricsA.realizedPL : metricsA.unrealizedPL; valB = b.status === 'Closed' ? metricsB.realizedPL : metricsB.unrealizedPL; break;
-                        case 'plR': valA = a.status === 'Closed' ? metricsA.realizedR : metricsA.unrealizedR; valB = b.status === 'Closed' ? metricsB.realizedR : metricsB.unrealizedR; break;
-                        case 'initialR': valA = metricsA.initialR; valB = metricsB.initialR; break;
-                        default: valA = a[key]; valB = b[key];
-                    }
-                    if (valA === undefined || valA === null) return 1; if (valB === undefined || valB === null) return -1;
-                    const comp = key.includes('Date') ? new Date(valA) - new Date(valB) : typeof valA === 'number' ? valA - valB : String(valA).localeCompare(String(valB));
-                    return dir === 'asc' ? comp : -comp;
-                });
-                ui.updateSortIndicators();
-                dom['trades-body'].innerHTML = tradesWithMetrics.map(tradeWithMetrics => {
-                    const { metrics, ...trade } = tradeWithMetrics;
-                    const pl = trade.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
-                    const r = trade.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                    const plClass = pl >= 0 ? 'text-green-600' : 'text-red-600';
-                    const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
-                    const currentRiskRValue = calc.getCurrentRiskR(trade);
-                    const currentRiskR = trade.status === 'Open' ? currentRiskRValue.toFixed(2) + 'R' : 'N/A';
-                    const riskRClass = trade.status === 'Open' && currentRiskRValue < 0 ? 'text-green-600' : 'text-secondary';
-                    const positionValue = (trade.currentPrice || trade.entryPrice) * trade.position;
-                    const percentOfAssets = (trade.status === 'Open' && totalNav > 0) ? `${(positionValue / totalNav * 100).toFixed(2)}%` : 'N/A';
-
-                    return `<tr class="hover:bg-slate-50 cursor-pointer" data-id="${trade.id}">
-                            <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
-                            <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatDate(trade.entryDate)}</td>
-                            <td data-label="Entry Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${util.formatCurrency(trade.entryPrice)}</td>
-                            <td data-label="Current Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.currentPrice ? util.formatCurrency(trade.currentPrice) : 'N/A'}</td>
-                            <td data-label="Position" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.position || 'N/A'}</td>
-                            <td data-label="% of Assets" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${percentOfAssets}</td>
-                            <td data-label="Initial Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.initialStop ? util.formatCurrency(trade.initialStop) : 'N/A'}</td>
-                            <td data-label="Initial Risk (R)" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${metrics.initialR.toFixed(2)}R</td>
-                            <td data-label="Trailing Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.trailingStop ? util.formatCurrency(trade.trailingStop) : 'N/A'}</td>
-                            <td data-label="Current Risk (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${riskRClass}">${currentRiskR}</td>
-                            <td data-label="P/L $" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${util.formatCurrency(pl)}</td>
-                            <td data-label="P/L (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${r.toFixed(2)}R</td>
-                            <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${trade.status}</span></td>
-                        </tr>`;
-                }).join('');
-                if (!tradesWithMetrics.length) dom['trades-body'].innerHTML = `<tr><td colspan="13" class="text-center py-8 text-secondary">No trades to display.</td></tr>`;
-            },
-            updateSortIndicators: () => {
-                dom['trades-head'].querySelectorAll('th.sortable').forEach(th => {
-                    th.removeAttribute('data-sort-dir');
-                    if(th.dataset.sort === state.sort.key) th.setAttribute('data-sort-dir', state.sort.dir);
-                });
-            },
-            renderNavChart: () => {
-                const ctx = dom['nav-chart'].getContext('2d');
-                const data = state.navHistory.map(item => ({ x: new Date(item.date).getTime(), y: item.nav }));
-                if (state.navChart) state.navChart.destroy();
-                state.navChart = new Chart(ctx, {
-                    type: 'line',
-                    data: { datasets: [{ label: 'NAV', data, borderColor: '#0079D3', backgroundColor: 'rgba(0, 121, 211, 0.1)', borderWidth: 2, pointRadius: data.length < 50 ? 3 : 0, fill: true, tension: 0.1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd,yyyy' }, grid: { color: 'rgba(204, 204, 204, 0.1)' } }, y: { ticks: { callback: v => util.formatCurrency(v) }, grid: { color: 'rgba(204, 204, 204, 0.1)'} } }, plugins: { tooltip: { callbacks: { label: c => `NAV: ${util.formatCurrency(c.parsed.y)}` } } } }
-                });
-            },
-            renderAllocationChart: (totalNav) => {
-                const canvas = dom['allocation-chart'];
-                const placeholder = dom['allocation-placeholder'];
-                if (state.allocationChart) { state.allocationChart.destroy(); }
-                const openTrades = state.trades.filter(t => t.status === 'Open');
-                const allocation = openTrades.reduce((acc, trade) => {
-                    const sector = trade.sector || 'Uncategorized';
-                    const value = (trade.currentPrice || trade.entryPrice) * trade.position;
-                    acc[sector] = (acc[sector] || 0) + value;
-                    return acc;
-                }, {});
-                if (state.settings.currentCash > 0) { allocation['Cash'] = state.settings.currentCash; }
-                const labels = Object.keys(allocation);
-                if (labels.length === 0 || totalNav <= 0) {
-                    canvas.style.display = 'none';
-                    placeholder.textContent = 'No assets to display.';
-                    placeholder.style.display = 'block';
-                    return;
-                }
-                canvas.style.display = 'block';
-                placeholder.style.display = 'none';
-                const ctx = canvas.getContext('2d');
-                const data = Object.values(allocation);
-                state.allocationChart = new Chart(ctx, { 
-                    type: 'pie', 
-                    data: { 
-                        labels: labels, 
-                        datasets: [{ 
-                            label: 'Portfolio Allocation', 
-                            data: data, 
-                            backgroundColor: ['#0079D3', '#FF4500', '#4856a3', '#ffb000', '#7e53c1', '#00a368', '#ff8717', '#a3a3a3'], 
-                            borderColor: 'var(--bg-secondary)', 
-                            borderWidth: 2 
-                        }] 
-                    }, 
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { 
-                            legend: { 
-                                position: 'bottom', 
-                                labels: { 
-                                    boxWidth: 12, 
-                                    padding: 15,
-                                    generateLabels: (chart) => {
-                                        const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                        originalLabels.forEach(label => {
-                                            const value = chart.data.datasets[0].data[label.index];
-                                            const percentage = totalNav > 0 ? (value / totalNav * 100) : 0;
-                                            label.text = `${chart.data.labels[label.index]}: ${percentage.toFixed(2)}%`;
-                                        });
-                                        return originalLabels;
-                                    }
-                                } 
-                            }, 
-                            tooltip: { 
-                                callbacks: { 
-                                    label: function(context) { 
-                                        let label = context.label || '';
-                                        if (label) { label += ': '; } 
-                                        if (context.parsed !== null) { 
-                                            const value = context.parsed;
-                                            const percentage = totalNav > 0 ? (value / totalNav * 100) : 0;
-                                            label += `${util.formatCurrency(value)} (${percentage.toFixed(2)}%)`; 
-                                        } 
-                                        return label; 
-                                    } 
-                                } 
-                            } 
-                        } 
-                    } 
-                });
-            },
-            renderNavHistory: () => {
-                const container = dom['nav-history-container'];
-                container.innerHTML = '';
-                if (!state.navHistory || state.navHistory.length === 0) {
-                    container.innerHTML = '<p class="text-center py-4 text-secondary">No NAV history to display.</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.id = 'nav-history-table';
-                table.className = 'min-w-full';
-                table.innerHTML = `
-                    <thead id="nav-history-table-head">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Last Update</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">NAV</th>
-                        </tr>
-                    </thead>
-                    <tbody id="nav-history-body">
-                        ${state.navHistory
-                            .slice().sort((a, b) => new Date(b.date) - new Date(a.date)) // Use slice to avoid mutating original
-                            .map(item => `
-                                <tr>
-                                    <td data-label="Date" class="px-6 py-4">${util.formatDate(item.date)}</td>
-                                    <td data-label="Last Update" class="px-6 py-4 text-sm text-secondary">${util.formatTime(item.timestamp)}</td>
-                                    <td data-label="NAV" class="px-6 py-4">${util.formatCurrency(item.nav)}</td>
-                                </tr>
-                            `).join('')
-                        }
-                    </tbody>
-                `;
-                container.appendChild(table);
-            },
-            renderCloudApiConfigs: () => {
-                dom['cloud-api-body'].innerHTML = state.settings.cloudApiConfigs.map(config => `
-                    <tr data-id="${config.id}">
-                        <td data-label="Name" class="px-6 py-4 text-sm font-medium">${config.name}</td>
-                        <td data-label="Base URL" class="px-6 py-4 text-sm text-secondary">${config.baseUrl}</td>
-                        <td data-label="Model" class="px-6 py-4 text-sm text-secondary">${config.model}</td>
-                        <td data-label="Actions" class="px-6 py-4 text-sm font-medium space-x-2">
-                            <button class="text-indigo-600 hover:text-indigo-900" data-action="edit">Edit</button>
-                            <button class="text-red-600 hover:text-red-900" data-action="delete">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-                 if (!state.settings.cloudApiConfigs.length) {
-                    dom['cloud-api-body'].innerHTML = `<tr><td colspan="4" class="text-center py-8 text-secondary">No Cloud API configurations.</td></tr>`;
-                }
-            },
-            showAdvancedStats: () => {
-                const s = calc.getAdvancedStats();
-                dom['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
-                    `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                        <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${util.formatCurrency(s.expectancy)}</p></div>
-                        <div class="themed-bg p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
-                        <div class="bg-green-100 p-4 rounded-lg text-green-800"><h3>Gains</h3><p>Avg Win: ${util.formatCurrency(s.avgWin)}</p><p>Largest Win: ${util.formatCurrency(s.largestWin)}</p></div>
-                        <div class="bg-red-100 p-4 rounded-lg text-red-800"><h3>Losses</h3><p>Avg Loss: ${util.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${util.formatCurrency(s.largestLoss)}</p></div>
-                        <div class="themed-bg p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${util.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${util.formatDuration(s.avgLossHold)}</p></div>
-                    </div>`;
-                ui.openModal(dom['stats-modal']);
-            },
-            populateOpenTradesDropdown: (selectId) => {
-                const sel = dom[selectId];
-                sel.innerHTML = '<option value="">Select a trade...</option>';
-                state.trades.filter(t => t.status === 'Open').forEach(t => sel.innerHTML += `<option value="${t.id}">${t.ticker} (${util.formatDate(t.entryDate)})</option>`);
+                if (!result.startsWith('Error:')) return result;
+                lastError = result;
             }
-        };
-
-        // --- EVENTS ---
-        const events = {
-            init: () => {
-                dom['btn-add-trade'].onclick = events.handleAddTradeClick;
-                dom['btn-exit-trade'].onclick = () => { ui.populateOpenTradesDropdown('exit-select'); ui.openModal(dom['exit-modal']); };
-                dom['btn-update-stop'].onclick = () => { ui.populateOpenTradesDropdown('stop-select'); dom['current-trailing-stop'].textContent = 'N/A'; dom['new-stop'].value = ''; dom['stop-remarks'].value = ''; ui.openModal(dom['stop-modal']); };
-                dom['btn-settings'].onclick = () => {
-                    dom['set-capital'].value = state.settings.initialCapital;
-                    dom['set-cash'].value = state.settings.currentCash;
-                    dom['set-risk-percent'].value = state.settings.riskPerTradePercentage;
-                    dom['set-moderate-dd'].value = state.settings.moderateDrawdownThreshold;
-                    dom['set-high-risk-dd'].value = state.settings.highRiskDrawdownThreshold;
-                    ui.openModal(dom['settings-modal']);
-                };
-                
-                dom['btn-provider-settings'].onclick = () => { 
-                    dom['alphavantage-key'].value = state.settings.alphaVantageKey; 
-                    ui.openModal(dom['provider-modal']); 
-                };
-                dom['btn-cloud-api-settings'].onclick = () => {
-                    ui.renderCloudApiConfigs();
-                    ui.openModal(dom['cloud-api-modal']);
-                };
-                dom['btn-cloud-ai-prompt'].onclick = () => {
-                    dom['prompt-cloud-weekly-summary'].value = state.settings.promptCloudWeeklySummary;
-                    dom['prompt-cloud-describe-holdings'].value = state.settings.promptCloudDescribeHoldings;
-                    dom['prompt-cloud-portfolio-analysis'].value = state.settings.promptCloudPortfolioAnalysis;
-                    dom['prompt-cloud-trade-analysis'].value = state.settings.promptCloudTradeAnalysis;
-                    dom['prompt-cloud-find-sector'].value = state.settings.promptCloudFindSector;
-                    ui.openModal(dom['cloud-prompt-modal']);
-                };
-                dom['btn-import'].onclick = () => dom['file-input'].click();
-                dom['file-input'].onchange = events.handleImport;
-                dom['btn-load-online'].onclick = events.handleLoadOnlineData;
-                dom['btn-export'].onclick = events.handleExport;
-                dom['btn-refresh'].onclick = api.refreshPrices;
-                dom['btn-view-stats'].onclick = ui.showAdvancedStats;
-                dom['btn-gen-summary'].onclick = events.handleGenSummary;
-                dom['btn-analyze-portfolio'].onclick = events.handleAnalyzePortfolio;
-                dom['btn-describe-holdings'].onclick = events.handleDescribeHoldings;
-                dom['btn-view-stop-history'].onclick = events.handleViewStopHistory;
-                
-                dom['trade-form'].onsubmit = events.handleSaveTrade;
-                dom['exit-form'].onsubmit = events.handleSaveExit;
-                dom['stop-form'].onsubmit = events.handleSaveStop;
-                dom['settings-form'].onsubmit = events.handleSaveSettings;
-                dom['provider-form'].onsubmit = events.handleSaveProviderKeys;
-                dom['cloud-api-form'].onsubmit = events.handleSaveCloudApiConfig;
-                dom['cloud-prompt-form'].onsubmit = events.handleSaveCloudPrompt;
-                dom['cloud-api-body'].onclick = events.handleCloudApiListClick;
-                dom['cloud-prompt-tabs'].addEventListener('click', events.handleCloudPromptTabClick);
-
-
-                dom['trades-head'].onclick = events.handleSort;
-                dom['trades-body'].onclick = events.handleEditTrade;
-                
-                dom['btn-find-sector'].onclick = events.handleFindSector;
-                dom['btn-analyze-trade'].onclick = events.handleAnalyzeTrade;
-                
-                dom.modalCancelButtons.forEach(btn => btn.onclick = () => ui.closeModal(btn.closest('.modal-overlay')));
-                dom['btn-copy-summary'].onclick = () => util.copyToClipboard(dom['summary-content'].innerText);
-                dom['btn-copy-portfolio'].onclick = () => util.copyToClipboard(dom['portfolio-content'].innerText);
-                dom['btn-copy-holdings'].onclick = () => util.copyToClipboard(dom['holdings-content'].innerText);
-                dom['btn-copy-ai-trade'].onclick = () => util.copyToClipboard(dom['ai-trade-content'].innerText);
-                dom['stop-select'].onchange = events.handleStopSelectChange;
-            },
-            handleStopSelectChange: (e) => {
-                const tradeId = e.target.value;
-                if (!tradeId) {
-                    dom['current-trailing-stop'].textContent = 'N/A';
-                    return;
-                }
-                const trade = state.trades.find(t => t.id === tradeId);
-                if (trade) {
-                    const currentStop = trade.trailingStop || trade.initialStop;
-                    dom['current-trailing-stop'].textContent = util.formatCurrency(currentStop);
-                }
-            },
-            handleCloudPromptTabClick: (e) => {
-                if(e.target.tagName !== 'BUTTON') return;
-
-                dom['cloud-prompt-tabs'].querySelectorAll('button').forEach(btn => {
-                    btn.classList.remove('tab-active');
-                    btn.classList.add('tab-inactive');
+            return `Error: All Cloud APIs failed. Last error: ${lastError}`;
+        },
+        callOpenAICompatibleLlm: async (systemPrompt, userPrompt, apiConfig) => {
+            const apiUrl = `${apiConfig.BASE_URL}/chat/completions`;
+            const payload = { model: apiConfig.MODEL, messages: [{ "role": "system", "content": systemPrompt }, { "role": "user", "content": userPrompt }] };
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.API_KEY}` },
+                    body: JSON.stringify(payload)
                 });
-                
-                e.target.classList.add('tab-active');
-                e.target.classList.remove('tab-inactive');
-
-                dom['cloud-prompt-form'].querySelectorAll('[data-tab-panel]').forEach(panel => {
-                    panel.classList.add('hidden');
-                });
-                
-                const panelId = e.target.dataset.tab;
-                dom['cloud-prompt-form'].querySelector(`[data-tab-panel="${panelId}"]`).classList.remove('hidden');
-            },
-            handleAddTradeClick: () => {
-                const totalOpenRisk_R = state.trades.filter(t => t.status === 'Open').reduce((sum, t) => sum + calc.getCurrentRiskR(t), 0);
-                const riskZone = calc.getRiskZone(totalOpenRisk_R);
-
-                if (riskZone === 'Red') {
-                    util.showAlert('HIGH RISK: Your total open risk exposure exceeds 6R. New trades are restricted.');
-                    return;
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API Error ${response.status}: ${errorBody}`);
                 }
-                if (riskZone === 'Yellow') {
-                    util.showAlert('CAUTION: Your total open risk exposure exceeds 3R. Are you sure you want to add a new position?', 'confirm', (proceed) => {
-                        if (proceed) {
-                            dom['trade-form'].reset(); dom['modal-title'].textContent = 'Add New Trade'; dom['trade-id'].value = ''; 
-                            ui.openModal(dom['trade-modal']);
-                        }
-                    });
-                    return;
-                }
-                dom['trade-form'].reset(); dom['modal-title'].textContent = 'Add New Trade'; dom['trade-id'].value = ''; 
-                ui.openModal(dom['trade-modal']);
-            },
-            handleSaveTrade: (e) => {
-                e.preventDefault();
-                const id = dom['trade-id'].value;
-                const tradeData = {
-                    ticker: dom.ticker.value.toUpperCase().trim(),
-                    entryDate: dom['entry-date'].value,
-                    entryPrice: parseFloat(dom['entry-price'].value),
-                    position: parseInt(dom.position.value),
-                    initialStop: parseFloat(dom['initial-stop'].value),
-                    sector: dom.sector.value,
-                    tags: dom.tags.value.split(',').map(t => t.trim()).filter(Boolean),
-                    emotionalState: dom['emotional-state'].value,
-                    psychologyNotes: dom['psychology-notes'].value,
-                    stopHistory: id ? state.trades.find(t=>t.id===id).stopHistory : []
-                };
-                if (id) {
-                    Object.assign(state.trades.find(t => t.id === id), tradeData);
-                } else {
-                     const cost = tradeData.entryPrice * tradeData.position;
-                    if (state.settings.currentCash < cost) {
-                        util.showAlert('Not enough cash to open this position.');
-                        return;
-                    }
-                    state.settings.currentCash -= cost;
-                    state.trades.push({ ...tradeData, id: `trade-${Date.now()}`, status: 'Open', currentPrice: null, stopHistory: [] });
-                }
-                ui.closeModal(dom['trade-modal']);
-                calc.recordNavPoint();
-                ui.render();
-            },
-            handleSaveExit: (e) => {
-                e.preventDefault();
-                const trade = state.trades.find(t => t.id === dom['exit-select'].value);
-                if (trade) {
-                    trade.status = 'Closed';
-                    trade.exitDate = dom['exit-date'].value;
-                    trade.exitPrice = parseFloat(dom['exit-price'].value);
-                    trade.exitRemarks = dom['exit-remarks'].value;
-                    const proceeds = trade.exitPrice * trade.position;
-                    state.settings.currentCash += proceeds;
-                    calc.recordNavPoint();
-                    ui.closeModal(dom['exit-modal']);
-                    ui.render();
-                }
-            },
-            handleSaveStop: (e) => { 
-                e.preventDefault(); 
-                const tradeId = dom['stop-select'].value;
-                const newStop = parseFloat(dom['new-stop'].value);
-                const remarks = dom['stop-remarks'].value;
-                const trade = state.trades.find(t => t.id === tradeId); 
-                
-                if(trade) { 
-                    if (!trade.stopHistory) {
-                        trade.stopHistory = [];
-                    }
-                    trade.stopHistory.push({
-                        date: new Date().toISOString(),
-                        oldStop: trade.trailingStop || trade.initialStop,
-                        newStop: newStop,
-                        remarks: remarks
-                    });
-                    trade.trailingStop = newStop;
-                    ui.closeModal(dom['stop-modal']); 
-                    ui.render(); 
-                } 
-            },
-            handleSaveSettings: (e) => { 
-                e.preventDefault(); 
-                state.settings.initialCapital = parseFloat(dom['set-capital'].value); 
-                state.settings.currentCash = parseFloat(dom['set-cash'].value); 
-                state.settings.riskPerTradePercentage = parseFloat(dom['set-risk-percent'].value);
-                state.settings.moderateDrawdownThreshold = parseFloat(dom['set-moderate-dd'].value);
-                state.settings.highRiskDrawdownThreshold = parseFloat(dom['set-high-risk-dd'].value);
-                state.settings.highWaterMark = state.settings.initialCapital;
-                calc.recordNavPoint();
-                ui.closeModal(dom['settings-modal']); 
-                ui.render(); 
-            },
-            handleSaveProviderKeys: (e) => {
-                e.preventDefault();
-                state.settings.alphaVantageKey = dom['alphavantage-key'].value.trim();
-                ui.closeModal(dom['provider-modal']);
-                util.showAlert(`Data provider settings saved.`);
-            },
-            handleSaveCloudApiConfig: (e) => {
-                e.preventDefault();
-                const id = dom['cloud-api-id'].value;
-                const configData = {
-                    name: dom['cloud-api-name'].value,
-                    apiKey: dom['cloud-api-key'].value,
-                    baseUrl: dom['cloud-api-base-url'].value,
-                    model: dom['cloud-api-model'].value
-                };
-
-                if (id) {
-                    const index = state.settings.cloudApiConfigs.findIndex(c => c.id === id);
-                    if (index > -1) {
-                        state.settings.cloudApiConfigs[index] = { ...state.settings.cloudApiConfigs[index], ...configData };
-                    }
-                } else {
-                    state.settings.cloudApiConfigs.push({ id: `cloud-${Date.now()}`, ...configData });
-                }
-                
-                ui.renderCloudApiConfigs();
-                dom['cloud-api-form'].reset();
-                dom['cloud-api-id'].value = '';
-            },
-            handleSaveCloudPrompt: (e) => {
-                e.preventDefault();
-                state.settings.promptCloudWeeklySummary = dom['prompt-cloud-weekly-summary'].value;
-                state.settings.promptCloudDescribeHoldings = dom['prompt-cloud-describe-holdings'].value;
-                state.settings.promptCloudPortfolioAnalysis = dom['prompt-cloud-portfolio-analysis'].value;
-                state.settings.promptCloudTradeAnalysis = dom['prompt-cloud-trade-analysis'].value;
-                state.settings.promptCloudFindSector = dom['prompt-cloud-find-sector'].value;
-                ui.closeModal(dom['cloud-prompt-modal']);
-                util.showAlert('Cloud AI prompts saved.');
-            },
-            handleCloudApiListClick: (e) => {
-                const action = e.target.dataset.action;
-                if (!action) return;
-
-                const row = e.target.closest('tr');
-                const id = row.dataset.id;
-                const config = state.settings.cloudApiConfigs.find(c => c.id === id);
-
-                if (action === 'edit' && config) {
-                    dom['cloud-api-id'].value = config.id;
-                    dom['cloud-api-name'].value = config.name;
-                    dom['cloud-api-key'].value = config.apiKey;
-                    dom['cloud-api-base-url'].value = config.baseUrl;
-                    dom['cloud-api-model'].value = config.model;
-                } else if (action === 'delete') {
-                    util.showAlert(`Are you sure you want to delete the "${config.name}" API?`, 'confirm', (proceed) => {
-                        if (proceed) {
-                            state.settings.cloudApiConfigs = state.settings.cloudApiConfigs.filter(c => c.id !== id);
-                            ui.renderCloudApiConfigs();
-                        }
-                    });
-                }
-            },
-            handleImport: (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        loadDataIntoState(data);
-                    } catch (err) {
-                        util.showAlert(`Failed to parse JSON file: ${err.message}`);
-                    }
-                };
-                reader.readAsText(file);
-            },
-            handleLoadOnlineData: async () => {
-                const url = 'https://elclel8888.github.io/TradingJ/trading_journal_backup.json';
-                ui.setLoading(dom['btn-load-online'], true, 'Loading...');
+                const result = await response.json();
+                if (result.choices?.[0]?.message) return result.choices[0].message.content;
+                throw new Error('Invalid response structure from API.');
+            } catch (error) {
+                console.error(`Error with ${apiConfig.name}:`, error);
+                return `Error: ${error.message}`;
+            }
+        },
+        refreshPrices: async () => {
+            const openTrades = State.trades.filter(t => t.status === 'Open');
+            if (!openTrades.length) return Utils.showAlert('No open positions to refresh.');
+            if (!State.settings.alphaVantageKey) return Utils.showAlert('Alpha Vantage API key is not set.');
+            
+            UI.setLoading(DOM['btn-refresh'], true, 'Refreshing...');
+            const errorMessages = new Set();
+            for (const trade of openTrades) {
                 try {
-                    const response = await fetch(url, { cache: 'no-cache' }); 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    const symbol = trade.ticker.trim();
+                    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${State.settings.alphaVantageKey}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    const price = data?.['Global Quote']?.['05. price'];
+                    if (price) {
+                        trade.currentPrice = parseFloat(price);
+                    } else {
+                        errorMessages.add(data.Note || data['Error Message'] || `Could not find price for ${trade.ticker}.`);
                     }
-                    const data = await response.json();
-                    loadDataIntoState(data);
                 } catch (error) {
-                    util.showAlert(`Failed to load online data: ${error.message}. Check the console for more details.`);
-                    console.error('Failed to fetch online data:', error);
-                } finally {
-                    ui.setLoading(dom['btn-load-online'], false);
+                    errorMessages.add(`Network error for ${trade.ticker}.`);
                 }
-            },
-            handleExport: () => {
-                const data = JSON.stringify({ settings: state.settings, trades: state.trades, navHistory: state.navHistory }, null, 2);
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
-                a.download = `trading_journal_backup.json`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            },
-            handleSort: (e) => {
-                const th = e.target.closest('th.sortable');
-                if (th) {
-                    const key = th.dataset.sort;
-                    if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
-                    else { state.sort.key = key; state.sort.dir = 'desc'; }
-                    ui.render();
+                if (openTrades.indexOf(trade) < openTrades.length - 1) await new Promise(resolve => setTimeout(resolve, 15000));
+            }
+            Calc.recordNavPoint(); 
+            UI.renderAll();
+            const message = errorMessages.size > 0 ? `Price refresh completed with issues:<br>- ${Array.from(errorMessages).join('<br>- ')}` : 'All prices refreshed successfully!';
+            Utils.showAlert(message);
+            UI.setLoading(DOM['btn-refresh'], false);
+        }
+    };
+
+    // =================================================================================
+    // MODULE: Calc
+    // Handles all business logic and financial calculations.
+    // =================================================================================
+    const Calc = {
+        getTradeMetrics: (trade) => {
+            const totalEntryQty = trade.entries.reduce((sum, e) => sum + e.quantity, 0);
+            if (totalEntryQty === 0) return { unrealizedPL: 0, realizedPL: 0, totalR: 0, currentPositionSize: 0, weightedAverageEntry: 0 };
+            
+            const totalEntryValue = trade.entries.reduce((sum, e) => sum + (e.price * e.quantity), 0);
+            const weightedAverageEntry = totalEntryValue / totalEntryQty;
+
+            const totalExitQty = trade.exits.reduce((sum, e) => sum + e.quantity, 0);
+            const currentPositionSize = totalEntryQty - totalExitQty;
+            
+            const realizedPL = trade.exits.reduce((sum, exit) => sum + (exit.price - weightedAverageEntry) * exit.quantity, 0);
+            
+            const unrealizedPL = (currentPositionSize > 0 && trade.currentPrice) 
+                ? (trade.currentPrice - weightedAverageEntry) * currentPositionSize 
+                : 0;
+
+            const { initialCapital, riskPerTradePercentage } = State.settings;
+            const accountRValue = initialCapital * (riskPerTradePercentage / 100);
+            const totalPL = realizedPL + unrealizedPL;
+            const totalR = accountRValue > 0 ? totalPL / accountRValue : 0;
+
+            return { unrealizedPL, realizedPL, totalR, currentPositionSize, weightedAverageEntry };
+        },
+        getCurrentRiskR: (trade) => {
+            if (trade.status !== 'Open') return 0;
+            
+            const { currentPositionSize, weightedAverageEntry } = Calc.getTradeMetrics(trade);
+            if (currentPositionSize <= 0) return 0;
+
+            const { initialCapital, riskPerTradePercentage } = State.settings;
+            const accountRValue = initialCapital * (riskPerTradePercentage / 100);
+            if (accountRValue <= 0) return 0;
+            
+            const activeStop = trade.trailingStop || trade.initialStop;
+            if (!activeStop) return 0;
+            
+            const riskInDollars = (weightedAverageEntry - activeStop) * currentPositionSize;
+            return riskInDollars / accountRValue;
+        },
+        getRiskMetrics: () => {
+            const openValue = State.trades.filter(t => t.status === 'Open').reduce((sum, t) => {
+                const { currentPositionSize, weightedAverageEntry } = Calc.getTradeMetrics(t);
+                return sum + ((t.currentPrice || weightedAverageEntry) * currentPositionSize);
+            }, 0);
+            
+            const nav = State.settings.currentCash + openValue;
+            State.settings.highWaterMark = Math.max(State.settings.highWaterMark || nav, nav);
+            const drawdownDollars = State.settings.highWaterMark - nav;
+            const drawdownPercent = State.settings.highWaterMark > 0 ? (drawdownDollars / State.settings.highWaterMark) * 100 : 0;
+            
+            return { nav, hwm: State.settings.highWaterMark, drawdownDollars, drawdownPercent };
+        },
+        getRiskZone: (totalOpenRiskR) => {
+            if (totalOpenRiskR > 6) return 'Red';
+            if (totalOpenRiskR > 3) return 'Yellow';
+            return 'Green';
+        },
+        getAdvancedStats: () => {
+            const closed = State.trades.filter(t => t.status === 'Closed');
+            if (!closed.length) return null;
+
+            const winners = closed.filter(t => Calc.getTradeMetrics(t).realizedPL > 0);
+            const losers = closed.filter(t => Calc.getTradeMetrics(t).realizedPL <= 0);
+            
+            const winRate = closed.length ? winners.length / closed.length : 0;
+            const totalGains = winners.reduce((s, t) => s + Calc.getTradeMetrics(t).realizedPL, 0);
+            const avgWin = winners.length ? totalGains / winners.length : 0;
+            const totalLosses = losers.reduce((s, t) => s + Calc.getTradeMetrics(t).realizedPL, 0);
+            const avgLoss = losers.length ? Math.abs(totalLosses / losers.length) : 0;
+            const largestWin = winners.reduce((max, t) => Math.max(max, Calc.getTradeMetrics(t).realizedPL), 0);
+            const largestLoss = losers.reduce((min, t) => Math.min(min, Calc.getTradeMetrics(t).realizedPL), 0);
+            
+            const getHoldingTime = (trade) => {
+                const firstEntry = trade.entries[0]?.date;
+                const lastExit = trade.exits[trade.exits.length - 1]?.date;
+                return (firstEntry && lastExit) ? new Date(lastExit) - new Date(firstEntry) : 0;
+            };
+
+            const avgWinHold = winners.length ? winners.reduce((s, t) => s + getHoldingTime(t), 0) / winners.length : 0;
+            const avgLossHold = losers.length ? losers.reduce((s, t) => s + getHoldingTime(t), 0) / losers.length : 0;
+
+            return { total: closed.length, expectancy: (winRate * avgWin) - ((1 - winRate) * avgLoss), winners: winners.length, losers: losers.length, avgWin, avgLoss, largestWin, largestLoss, avgWinHold, avgLossHold };
+        },
+        recordNavPoint: () => {
+            const { nav } = Calc.getRiskMetrics();
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const timestamp = now.toISOString();
+            const idx = State.navHistory.findIndex(e => e.date === today);
+            
+            if (idx > -1) {
+                State.navHistory[idx].nav = parseFloat(nav.toFixed(2));
+                State.navHistory[idx].timestamp = timestamp;
+            } else {
+                State.navHistory.push({ date: today, nav: parseFloat(nav.toFixed(2)), timestamp: timestamp });
+            }
+            State.navHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+    };
+
+    // =================================================================================
+    // MODULE: UI
+    // Manages all rendering and DOM manipulation.
+    // =================================================================================
+    const UI = {
+        renderAll: () => { 
+            const riskMetrics = Calc.getRiskMetrics();
+            UI.updateDashboard(riskMetrics); 
+            UI.renderTrades(riskMetrics.nav); 
+            UI.renderNavChart(); 
+            UI.renderAllocationChart(riskMetrics.nav);
+            UI.renderNavHistory(); 
+        },
+        setLoading: (btn, loading, text = '') => {
+            if (loading) {
+                btn.originalHTML = btn.innerHTML;
+                btn.innerHTML = `<span class="flex items-center justify-center"><div class="loader-sm"></div><span class="ml-2">${text}</span></span>`;
+                btn.disabled = true;
+            } else {
+                if (btn.originalHTML) btn.innerHTML = btn.originalHTML;
+                btn.disabled = false;
+            }
+        },
+        openModal: (el) => { el.classList.remove('hidden'); setTimeout(() => el.classList.remove('opacity-0'), 10); },
+        closeModal: (el) => { el.classList.add('opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); },
+        updateDashboard: (riskMetrics) => {
+            let totalRealizedPL = 0, totalUnrealizedPL = 0, totalOpenPL_R = 0, totalOpenRisk_R = 0, totalWins = 0, totalGains = 0, totalLossesAbs = 0;
+            const closedTrades = State.trades.filter(t => t.status === 'Closed');
+
+            State.trades.forEach(trade => {
+                const metrics = Calc.getTradeMetrics(trade);
+                totalRealizedPL += metrics.realizedPL;
+                if(trade.status === 'Open') {
+                    totalUnrealizedPL += metrics.unrealizedPL;
+                    totalOpenPL_R += metrics.totalR;
+                    totalOpenRisk_R += Calc.getCurrentRiskR(trade);
                 }
-            },
-            handleEditTrade: (e) => {
-                const row = e.target.closest('tr[data-id]');
-                if (row) {
-                    const trade = state.trades.find(t => t.id === row.dataset.id);
-                    if (trade) {
-                        dom['modal-title'].textContent = 'Edit Trade';
-                        dom['trade-id'].value = trade.id;
-                        dom.ticker.value = trade.ticker;
-                        dom['entry-date'].value = trade.entryDate;
-                        dom['entry-price'].value = trade.entryPrice;
-                        dom.position.value = trade.position;
-                        dom['initial-stop'].value = trade.initialStop;
-                        dom.sector.value = trade.sector || '';
-                        dom.tags.value = trade.tags ? trade.tags.join(', ') : '';
-                        dom['emotional-state'].value = trade.emotionalState || 'Neutral';
-                        dom['psychology-notes'].value = trade.psychologyNotes || '';
-                        ui.openModal(dom['trade-modal']);
+            });
+
+            const closedMetrics = closedTrades.map(Calc.getTradeMetrics);
+            totalWins = closedMetrics.filter(m => m.realizedPL > 0).length;
+            totalGains = closedMetrics.filter(m => m.realizedPL > 0).reduce((sum, m) => sum + m.realizedPL, 0);
+            totalLossesAbs = Math.abs(closedMetrics.filter(m => m.realizedPL < 0).reduce((sum, m) => sum + m.realizedPL, 0));
+
+            UI.renderRiskDashboard(riskMetrics, totalOpenRisk_R);
+            
+            DOM['total-assets'].textContent = Utils.formatCurrency(riskMetrics.nav);
+            DOM['current-cash'].textContent = Utils.formatCurrency(State.settings.currentCash);
+            const cashPercentage = riskMetrics.nav > 0 ? (State.settings.currentCash / riskMetrics.nav) * 100 : 0;
+            DOM['cash-percentage'].textContent = `${cashPercentage.toFixed(1)}%`;
+
+            DOM['realized-pl'].textContent = Utils.formatCurrency(totalRealizedPL);
+            DOM['realized-pl'].classList.toggle('text-red-600', totalRealizedPL < 0);
+            DOM['realized-pl'].classList.toggle('text-green-600', totalRealizedPL >= 0);
+
+            DOM['unrealized-pl'].textContent = Utils.formatCurrency(totalUnrealizedPL);
+            DOM['unrealized-pl'].classList.toggle('text-red-600', totalUnrealizedPL < 0);
+            DOM['unrealized-pl'].classList.toggle('text-green-600', totalUnrealizedPL >= 0);
+
+            DOM['total-open-r'].textContent = `${totalOpenPL_R.toFixed(2)}R`;
+            DOM['total-open-risk-card'].textContent = `${totalOpenRisk_R.toFixed(2)}R`;
+            DOM['win-rate'].textContent = `${(closedTrades.length ? (totalWins / closedTrades.length) * 100 : 0).toFixed(1)}%`;
+            DOM['profit-factor'].textContent = (totalLossesAbs > 0 ? totalGains / totalLossesAbs : 0).toFixed(2);
+        },
+        renderRiskDashboard: (riskMetrics, totalOpenRiskR) => {
+            const { hwm, drawdownDollars, drawdownPercent } = riskMetrics;
+            const riskZone = Calc.getRiskZone(totalOpenRiskR);
+            DOM['high-water-mark'].textContent = Utils.formatCurrency(hwm);
+            DOM['current-drawdown'].textContent = `${Utils.formatCurrency(drawdownDollars)} (${drawdownPercent.toFixed(2)}%)`;
+            DOM['total-open-risk'].textContent = `${(totalOpenRiskR || 0).toFixed(2)}R`;
+            const zoneEl = DOM['risk-zone'];
+            zoneEl.textContent = riskZone;
+            zoneEl.className = 'px-3 py-1 text-sm font-bold rounded-full';
+            if (riskZone === 'Green') zoneEl.classList.add('bg-green-100', 'text-green-800');
+            else if (riskZone === 'Yellow') zoneEl.classList.add('bg-yellow-100', 'text-yellow-800');
+            else zoneEl.classList.add('bg-red-100', 'text-red-800');
+        },
+        renderTrades: (totalNav) => {
+            DOM['trades-head'].querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.sort === State.ui.sort.key) {
+                    th.classList.add(State.ui.sort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            const tradesWithMetrics = State.trades.map(trade => {
+                const metrics = Calc.getTradeMetrics(trade);
+                const positionValue = (trade.currentPrice || metrics.weightedAverageEntry) * metrics.currentPositionSize;
+                return {
+                    ...trade,
+                    metrics: {
+                        ...metrics,
+                        entryDate: trade.entries[0]?.date || '',
+                        percentOfAssets: (trade.status === 'Open' && totalNav > 0) ? (positionValue / totalNav * 100) : 0,
+                        currentRiskR: trade.status === 'Open' ? Calc.getCurrentRiskR(trade) : -Infinity,
                     }
+                };
+            });
+
+            let displayedTrades = tradesWithMetrics.filter(t => t.status === 'Open' || State.ui.showClosedTrades);
+
+            const { key, direction } = State.ui.sort;
+            const sortDir = direction === 'asc' ? 1 : -1;
+
+            displayedTrades.sort((a, b) => {
+                const valA = a.metrics[key] !== undefined ? a.metrics[key] : a[key];
+                const valB = b.metrics[key] !== undefined ? b.metrics[key] : b[key];
+                
+                const valAIsNum = typeof valA === 'number';
+                const valBIsNum = typeof valB === 'number';
+
+                if (valAIsNum && valBIsNum) {
+                    return (valA - valB) * sortDir;
                 }
-            },
-            handleGenSummary: async () => {
-                ui.openModal(dom['summary-modal']);
-                if (dom['summary-content']) dom['summary-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
                 
-                const oneWeekAgo = new Date();
-                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                const recentTrades = state.trades.filter(t => t.status === 'Closed' && new Date(t.exitDate) >= oneWeekAgo);
-                if (!recentTrades.length) {
-                    dom['summary-content'].innerHTML = "<p>No closed trades in the last 7 days to summarize.</p>";
-                    return;
-                }
+                const strA = String(valA ?? '').toLowerCase();
+                const strB = String(valB ?? '').toLowerCase();
+
+                return strA.localeCompare(strB) * sortDir;
+            });
+            
+            DOM['trades-body'].innerHTML = displayedTrades.map(tradeWithMetrics => {
+                const { metrics, ...trade } = tradeWithMetrics;
+                const { unrealizedPL, realizedPL, totalR, currentPositionSize, weightedAverageEntry } = metrics;
                 
-                const stats = recentTrades.map(calc.getTradeMetrics);
-                const totalPL = stats.reduce((sum, s) => sum + s.realizedPL, 0);
-                const totalR = stats.reduce((sum, s) => sum + s.realizedR, 0);
-                const winRate = (recentTrades.filter(t => calc.getTradeMetrics(t).realizedPL > 0).length / recentTrades.length) * 100;
-
-                const dataString = `- Total Trades: ${recentTrades.length}\n- Total P/L: ${util.formatCurrency(totalPL)}\n- Total R-Multiple: ${totalR.toFixed(2)}R\n- Win Rate: ${winRate.toFixed(1)}%`;
-                const systemPrompt = "You are a helpful financial analyst AI.";
-                const userPrompt = state.settings.promptCloudWeeklySummary.replace('{{DATA}}', dataString);
+                const plClass = (unrealizedPL + realizedPL) >= 0 ? 'text-green-600' : 'text-red-600';
+                const statusClass = trade.status === 'Open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
+                const currentRiskR = trade.status === 'Open' ? metrics.currentRiskR.toFixed(2) + 'R' : 'N/A';
+                const percentOfAssets = (trade.status === 'Open' && totalNav > 0) ? `${metrics.percentOfAssets.toFixed(2)}%` : 'N/A';
                 
-                const result = await api.callCloudLlm(systemPrompt, userPrompt);
-                dom['summary-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
-            },
-            handleDescribeHoldings: async () => {
-                ui.openModal(dom['holdings-modal']);
-                if (dom['holdings-content']) dom['holdings-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
+                const mainRowHTML = `
+                    <tr class="trade-row hover:bg-slate-50 cursor-pointer" data-id="${trade.id}">
+                        <td data-label="Ticker" class="px-6 py-4 whitespace-nowrap text-sm font-medium">${trade.ticker}</td>
+                        <td data-label="Entry Date" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${Utils.formatDate(trade.entries[0]?.date)}</td>
+                        <td data-label="Avg. Entry" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${Utils.formatCurrency(weightedAverageEntry)}</td>
+                        <td data-label="Current Price" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.currentPrice ? Utils.formatCurrency(trade.currentPrice) : 'N/A'}</td>
+                        <td data-label="Position" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${currentPositionSize || '0'}</td>
+                        <td data-label="% of Assets" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${percentOfAssets}</td>
+                        <td data-label="Initial Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.initialStop ? Utils.formatCurrency(trade.initialStop) : 'N/A'}</td>
+                        <td data-label="Trailing Stop" class="px-6 py-4 whitespace-nowrap text-sm text-secondary">${trade.trailingStop ? Utils.formatCurrency(trade.trailingStop) : 'N/A'}</td>
+                        <td data-label="Current Risk (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${currentRiskR}</td>
+                        <td data-label="Unrealized P/L" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${unrealizedPL >= 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatCurrency(unrealizedPL)}</td>
+                        <td data-label="Realized P/L" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${realizedPL >= 0 ? 'text-green-600' : 'text-red-600'}">${Utils.formatCurrency(realizedPL)}</td>
+                        <td data-label="Total P/L (R)" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${plClass}">${totalR.toFixed(2)}R</td>
+                        <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${trade.status}</span></td>
+                        <td data-label="Actions" class="px-6 py-4 whitespace-nowrap text-sm"><button data-action="edit-trade" class="text-indigo-600 hover:text-indigo-900 text-xs">Edit</button></td>
+                    </tr>`;
+
+                const entriesHTML = trade.entries.map(e => `<tr><td class="px-2 py-1">Entry</td><td class="px-2 py-1">${Utils.formatDate(e.date)}</td><td class="px-2 py-1">${e.quantity}</td><td class="px-2 py-1">${Utils.formatCurrency(e.price)}</td><td class="px-2 py-1 text-xs">${e.notes || ''}</td></tr>`).join('');
+                const exitsHTML = trade.exits.map(e => `<tr><td class="px-2 py-1 text-red-500">Exit</td><td class="px-2 py-1">${Utils.formatDate(e.date)}</td><td class="px-2 py-1">${e.quantity}</td><td class="px-2 py-1">${Utils.formatCurrency(e.price)}</td><td class="px-2 py-1 text-xs">${e.notes || ''}</td></tr>`).join('');
                 
-                const allTrades = state.trades;
-                const currentCash = util.formatCurrency(state.settings.currentCash);
-                let historyText = `**Current Cash Balance:** ${currentCash}\n\n---\n\n`;
+                const detailsRowHTML = `
+                    <tr class="trade-details-row" data-details-for="${trade.id}">
+                        <td colspan="14" class="details-cell">
+                            <h4 class="font-bold text-sm mb-2">Transaction History</h4>
+                            <table class="min-w-full text-xs">
+                                <thead class="bg-slate-100"><tr>
+                                    <th class="px-2 py-1 text-left">Type</th><th class="px-2 py-1 text-left">Date</th><th class="px-2 py-1 text-left">Qty</th><th class="px-2 py-1 text-left">Price</th><th class="px-2 py-1 text-left">Notes</th>
+                                </tr></thead>
+                                <tbody>${entriesHTML}${exitsHTML}</tbody>
+                            </table>
+                        </td>
+                    </tr>`;
 
-                if (!allTrades.length) {
-                    historyText += "There is no trade history to describe.";
-                } else {
-                    historyText += allTrades.map(t => {
-                        const metrics = calc.getTradeMetrics(t);
-                        const pl = t.status === 'Closed' ? metrics.realizedPL : metrics.unrealizedPL;
-                        const r = t.status === 'Closed' ? metrics.realizedR : metrics.unrealizedR;
-                        let tradeDescription = `**Ticker: ${t.ticker}**\n`;
-                        tradeDescription += `- Status: ${t.status}\n`;
-                        tradeDescription += `- Entry: ${util.formatDate(t.entryDate)} at ${util.formatCurrency(t.entryPrice)}\n`;
-                        tradeDescription += `- Position Size: ${t.position}\n`;
-                        tradeDescription += `- Initial Stop: ${util.formatCurrency(t.initialStop)}\n`;
-
-                        if (t.status === 'Closed') {
-                            tradeDescription += `- Exit: ${util.formatDate(t.exitDate)} at ${util.formatCurrency(t.exitPrice)}\n`;
-                            if(t.exitRemarks) tradeDescription += `- Exit Remarks: ${t.exitRemarks}\n`;
-                        } else {
-                             tradeDescription += `- Current Price: ${t.currentPrice ? util.formatCurrency(t.currentPrice) : 'N/A'}\n`;
-                        }
-
-                        if (t.trailingStop) {
-                            tradeDescription += `- Current Trailing Stop: ${util.formatCurrency(t.trailingStop)}\n`;
-                            if (t.stopHistory && t.stopHistory.length > 0) {
-                                const lastStopUpdate = t.stopHistory[t.stopHistory.length - 1];
-                                if (lastStopUpdate.remarks) {
-                                    tradeDescription += `- Last Stop Update Remark: "${lastStopUpdate.remarks}"\n`;
+                return mainRowHTML + detailsRowHTML;
+            }).join('');
+            if (!displayedTrades.length) DOM['trades-body'].innerHTML = `<tr><td colspan="14" class="text-center py-8 text-secondary">No trades to display.</td></tr>`;
+        },
+        renderNavChart: () => {
+            const ctx = DOM['nav-chart'].getContext('2d');
+            if (State.charts.navChart) State.charts.navChart.destroy();
+            const chartData = {
+                datasets: [{
+                    label: 'NAV',
+                    data: State.navHistory.map(item => ({ x: new Date(item.date).getTime(), y: item.nav })),
+                    borderColor: '#0079D3',
+                    backgroundColor: 'rgba(0, 121, 211, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: State.navHistory.length < 50 ? 3 : 0,
+                    fill: true,
+                    tension: 0.1
+                }]
+            };
+            const options = { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' } }, y: { ticks: { callback: v => Utils.formatCurrency(v) } } } };
+            State.charts.navChart = new Chart(ctx, { type: 'line', data: chartData, options: options });
+        },
+        renderAllocationChart: (totalNav) => {
+            if (State.charts.allocationChart) State.charts.allocationChart.destroy();
+            
+            const openTrades = State.trades.filter(t => t.status === 'Open');
+            const allocation = openTrades.reduce((acc, trade) => {
+                const sector = trade.sector || 'Uncategorized';
+                const { currentPositionSize, weightedAverageEntry } = Calc.getTradeMetrics(trade);
+                acc[sector] = (acc[sector] || 0) + (trade.currentPrice || weightedAverageEntry) * currentPositionSize;
+                return acc;
+            }, {});
+            if (State.settings.currentCash > 0) allocation['Cash'] = State.settings.currentCash;
+            
+            const labels = Object.keys(allocation);
+            if (labels.length === 0 || totalNav <= 0) {
+                DOM['allocation-chart'].style.display = 'none';
+                DOM['allocation-placeholder'].textContent = 'No assets to display.';
+                DOM['allocation-placeholder'].style.display = 'block';
+                return;
+            }
+            DOM['allocation-chart'].style.display = 'block';
+            DOM['allocation-placeholder'].style.display = 'none';
+            
+            const ctx = DOM['allocation-chart'].getContext('2d');
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    data: Object.values(allocation),
+                    backgroundColor: ['#0079D3', '#FF4500', '#4856a3', '#ffb000', '#7e53c1', '#00a368', '#ff8717', '#a3a3a3'],
+                    borderColor: 'var(--bg-secondary)',
+                    borderWidth: 2
+                }]
+            };
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            generateLabels: (chart) => {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        const percentage = totalNav > 0 ? (value / totalNav * 100) : 0;
+                                        return {
+                                            text: `${label}: ${percentage.toFixed(2)}%`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: isNaN(value),
+                                            index: i
+                                        };
+                                    });
                                 }
+                                return [];
                             }
                         }
-                        
-                        tradeDescription += `- P/L: ${util.formatCurrency(pl)} (${r.toFixed(2)}R)\n`;
-                        tradeDescription += `- Psychology: ${t.emotionalState || 'not recorded'} - "${t.psychologyNotes || 'None'}"\n`;
-                        
-                        return tradeDescription;
-                    }).join('\n---\n\n');
-                }
-
-                const systemPrompt = "You are a helpful financial analyst AI.";
-                const userPrompt = state.settings.promptCloudDescribeHoldings.replace('{{DATA}}', historyText);
-                const result = await api.callCloudLlm(systemPrompt, userPrompt);
-                dom['holdings-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
-
-            },
-            handleAnalyzePortfolio: async () => {
-                ui.openModal(dom['portfolio-modal']);
-                dom['portfolio-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
-                const openTrades = state.trades.filter(t => t.status === 'Open');
-                if (!openTrades.length) {
-                    dom['portfolio-content'].innerHTML = "<p>No open trades to analyze.</p>";
-                    return;
-                }
-
-                const totalUnrealizedPL = openTrades.reduce((sum, t) => sum + calc.getTradeMetrics(t).unrealizedPL, 0);
-                const tradeDetails = openTrades.map(t => {
-                    const m = calc.getTradeMetrics(t);
-                    return `- ${t.ticker}: P/L ${util.formatCurrency(m.unrealizedPL)} (${m.unrealizedR.toFixed(2)}R). Psychology Notes: "${t.psychologyNotes || 'None'}".`;
-                }).join('\n');
-                const dataString = `- Positions: ${openTrades.length}\n- Total Unrealized P/L: ${util.formatCurrency(totalUnrealizedPL)}\n\n**Positions:**\n${tradeDetails}`;
-                
-                const systemPrompt = "You are a helpful financial analyst AI.";
-                const userPrompt = state.settings.promptCloudPortfolioAnalysis.replace('{{DATA}}', dataString);
-                
-                const result = await api.callCloudLlm(systemPrompt, userPrompt);
-                dom['portfolio-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
-            },
-            handleAnalyzeTrade: async () => {
-                ui.openModal(dom['ai-trade-modal']);
-                dom['ai-trade-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
-                
-                const [ticker, entry, stop, notes] = [dom.ticker.value, dom['entry-price'].value, dom['initial-stop'].value, dom['psychology-notes'].value];
-                if (!ticker || !entry || !stop) {
-                    dom['ai-trade-content'].innerHTML = "<p>Ticker, Entry, and Stop are required for analysis.</p>";
-                    return;
-                }
-                
-                let userPrompt = state.settings.promptCloudTradeAnalysis;
-                userPrompt = userPrompt.replace('{{TICKER}}', ticker)
-                               .replace('{{ENTRY}}', entry)
-                               .replace('{{STOP}}', stop)
-                               .replace('{{NOTES}}', notes);
-
-                const systemPrompt = "You are a helpful financial analyst AI.";
-                const result = await api.callCloudLlm(systemPrompt, userPrompt);
-                dom['ai-trade-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
-            },
-            handleFindSector: async () => {
-                const ticker = dom.ticker.value;
-                if (!ticker) return util.showAlert('Enter a ticker first.');
-                ui.setLoading(dom['btn-find-sector'], true, '');
-
-                const systemPrompt = "You are a helpful financial analyst AI.";
-                const userPrompt = state.settings.promptCloudFindSector.replace('{{TICKER}}', ticker);
-                const result = await api.callCloudLlm(systemPrompt, userPrompt);
-                
-                if (result && !result.startsWith('Error:')) {
-                    const sector = result.trim().replace(/\.$/, '');
-                    dom.sector.value = sector;
-                } else {
-                    util.showAlert(`Could not find sector. AI analysis failed. Last error: ${result}`);
-                }
-                ui.setLoading(dom['btn-find-sector'], false);
-            },
-            handleViewStopHistory: () => {
-                const select = dom['stop-history-select'];
-                select.innerHTML = '<option value="">Select a trade...</option>';
-                state.trades.forEach(t => {
-                    select.innerHTML += `<option value="${t.id}">${t.ticker} (${util.formatDate(t.entryDate)})</option>`;
-                });
-                // Clear previous history
-                dom['stop-history-content'].innerHTML = '';
-
-                select.onchange = (e) => {
-                    const trade = state.trades.find(t => t.id === e.target.value);
-                    const content = dom['stop-history-content'];
-                    if (!trade || !trade.stopHistory || trade.stopHistory.length === 0) {
-                        content.innerHTML = '<p class="text-secondary text-center py-4">No stop history for this trade.</p>';
-                        return;
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.label}: ${Utils.formatCurrency(context.parsed)} (${(context.parsed / totalNav * 100).toFixed(2)}%)`
+                        }
                     }
-                    content.innerHTML = `
-                        <table class="min-w-full">
-                            <thead class="themed-bg"><tr>
-                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Date</th>
-                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Old Stop</th>
-                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">New Stop</th>
-                                <th class="px-4 py-2 text-left text-sm font-medium text-secondary uppercase">Remarks</th>
-                            </tr></thead>
-                            <tbody>
-                                ${trade.stopHistory.map(h => `
-                                    <tr>
-                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatDate(h.date)} ${util.formatTime(h.date)}</td>
-                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatCurrency(h.oldStop)}</td>
-                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${util.formatCurrency(h.newStop)}</td>
-                                        <td class="px-4 py-2 border-t" style="border-color:var(--border-color)">${h.remarks || 'N/A'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                };
-                ui.openModal(dom['stop-history-modal']);
+                }
+            };
+            State.charts.allocationChart = new Chart(ctx, { type: 'pie', data: chartData, options: options });
+        },
+        renderNavHistory: () => {
+            const container = DOM['nav-history-container'];
+            if (!State.navHistory || State.navHistory.length === 0) {
+                container.innerHTML = '<p class="text-center py-4 text-secondary">No NAV history.</p>';
+                return;
             }
-        };
+            container.innerHTML = `<table id="nav-history-table" class="min-w-full">
+                <thead><tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Last Update</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">NAV</th>
+                </tr></thead>
+                <tbody>${State.navHistory.slice().reverse().map(item => `
+                    <tr>
+                        <td data-label="Date" class="px-6 py-4">${Utils.formatDate(item.date)}</td>
+                        <td data-label="Last Update" class="px-6 py-4">${Utils.formatTime(item.timestamp)}</td>
+                        <td data-label="NAV" class="px-6 py-4">${Utils.formatCurrency(item.nav)}</td>
+                    </tr>`).join('')}
+                </tbody></table>`;
+        },
+        renderCloudApiConfigs: () => {
+            DOM['cloud-api-body'].innerHTML = State.settings.cloudApiConfigs.map(config => `
+                <tr data-id="${config.id}">
+                    <td data-label="Name" class="px-6 py-4">${config.name}</td>
+                    <td data-label="Base URL" class="px-6 py-4">${config.baseUrl}</td>
+                    <td data-label="Model" class="px-6 py-4">${config.model}</td>
+                    <td data-label="Actions" class="px-6 py-4 space-x-2">
+                        <button class="text-indigo-600 hover:text-indigo-900" data-action="edit">Edit</button>
+                        <button class="text-red-600 hover:text-red-900" data-action="delete">Delete</button>
+                    </td>
+                </tr>`).join('');
+        },
+        populateOpenTradesDropdown: (selectId) => {
+            const sel = DOM[selectId];
+            sel.innerHTML = '<option value="">Select a position...</option>';
+            State.trades.filter(t => t.status === 'Open').forEach(t => {
+                 sel.innerHTML += `<option value="${t.id}">${t.ticker} (Opened: ${Utils.formatDate(t.entries[0]?.date)})</option>`
+            });
+        }
+    };
 
-        // --- MAIN INIT ---
-        const init = () => {
-            cacheDom();
-            events.init();
+    // =================================================================================
+    // MODULE: Events
+    // Handles all event listeners and user interactions.
+    // =================================================================================
+    const Events = {
+        init: () => {
+            DOM['btn-add-trade'].onclick = Events.handleAddTradeClick;
+            DOM['btn-exit-trade'].onclick = () => { UI.populateOpenTradesDropdown('exit-select'); DOM['exit-current-position'].textContent = 'N/A'; UI.openModal(DOM['exit-modal']); };
+            DOM['btn-update-stop'].onclick = () => { UI.populateOpenTradesDropdown('stop-select'); DOM['current-trailing-stop'].textContent = 'N/A'; DOM['new-stop'].value = ''; DOM['stop-remarks'].value = ''; UI.openModal(DOM['stop-modal']); };
+            DOM['btn-refresh'].onclick = API.refreshPrices;
             
-            ui.applyTheme(); 
+            DOM['btn-import'].onclick = () => DOM['file-input'].click();
+            DOM['file-input'].onchange = Events.handleImport;
+            DOM['btn-load-online'].onclick = Events.handleLoadOnlineData;
+            DOM['btn-export'].onclick = Events.handleExport;
 
-            if (state.navHistory.length === 0 && state.settings.initialCapital) {
+            DOM['btn-settings'].onclick = Events.handleOpenSettings;
+            DOM['btn-provider-settings'].onclick = () => { DOM['alphavantage-key'].value = State.settings.alphaVantageKey; UI.openModal(DOM['provider-modal']); };
+            
+            DOM['btn-cloud-api-settings'].onclick = () => { 
+                if (!State.settings.cloudApiConfigs) State.settings.cloudApiConfigs = [];
+                UI.renderCloudApiConfigs(); 
+                UI.openModal(DOM['cloud-api-modal']); 
+            };
+            
+            DOM['btn-cloud-ai-prompt'].onclick = Events.handleOpenCloudPrompts;
+
+            DOM['btn-view-stats'].onclick = Events.handleViewAdvancedStats;
+            DOM['btn-gen-summary'].onclick = Events.handleGenSummary;
+            DOM['btn-analyze-portfolio'].onclick = Events.handleAnalyzePortfolio;
+            DOM['btn-describe-holdings'].onclick = Events.handleDescribeHoldings;
+            DOM['btn-view-stop-history'].onclick = Events.handleViewStopHistory;
+
+            DOM['trade-form'].onsubmit = Events.handleSaveTrade;
+            DOM['exit-form'].onsubmit = Events.handleSaveExit;
+            DOM['stop-form'].onsubmit = Events.handleSaveStop;
+            DOM['settings-form'].onsubmit = Events.handleSaveSettings;
+            DOM['provider-form'].onsubmit = Events.handleSaveProviderKeys;
+            DOM['cloud-api-form'].onsubmit = Events.handleSaveCloudApiConfig;
+            DOM['cloud-prompt-form'].onsubmit = Events.handleSaveCloudPrompt;
+
+            DOM['toggle-closed-trades'].onchange = e => { State.ui.showClosedTrades = e.target.checked; UI.renderAll(); };
+            DOM['trades-head'].onclick = Events.handleSortTrades;
+            DOM['trades-body'].onclick = Events.handleTradesTableClick;
+            DOM['cloud-api-body'].onclick = Events.handleCloudApiListClick;
+            DOM['cloud-prompt-tabs'].onclick = Events.handleCloudPromptTabClick;
+            DOM['stop-select'].onchange = Events.handleStopSelectChange;
+            DOM['exit-select'].onchange = Events.handleExitSelectChange;
+            DOM.modalCancelButtons.forEach(btn => btn.onclick = () => UI.closeModal(btn.closest('.modal-overlay')));
+            
+            DOM['btn-find-sector'].onclick = Events.handleFindSector;
+            DOM['btn-analyze-trade'].onclick = Events.handleAnalyzeTrade;
+            
+            DOM['btn-copy-summary'].onclick = () => Utils.copyToClipboard(DOM['summary-content'].innerText);
+            DOM['btn-copy-portfolio'].onclick = () => Utils.copyToClipboard(DOM['portfolio-content'].innerText);
+            DOM['btn-copy-holdings'].onclick = () => Utils.copyToClipboard(DOM['holdings-content'].innerText);
+            DOM['btn-copy-ai-trade'].onclick = () => Utils.copyToClipboard(DOM['ai-trade-content'].innerText);
+        },
+
+        handleSortTrades: (e) => {
+            const header = e.target.closest('th');
+            if (!header || !header.dataset.sort) return;
+
+            const newKey = header.dataset.sort;
+            const currentSort = State.ui.sort;
+
+            if (newKey === currentSort.key) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.key = newKey;
+                currentSort.direction = 'desc';
+            }
+            
+            UI.renderAll();
+        },
+
+        handleAddTradeClick: () => {
+            const totalOpenRisk_R = State.trades.filter(t => t.status === 'Open').reduce((sum, t) => sum + Calc.getCurrentRiskR(t), 0);
+            const riskZone = Calc.getRiskZone(totalOpenRisk_R);
+
+            if (riskZone === 'Red') {
+                Utils.showAlert('HIGH RISK: Your total open risk exposure exceeds 6R. New trades are restricted.');
+                return;
+            }
+            if (riskZone === 'Yellow') {
+                Utils.showAlert('CAUTION: Your total open risk exposure exceeds 3R. Are you sure you want to add a new position?', 'confirm', (proceed) => {
+                    if (proceed) Events.openTradeModal();
+                });
+                return;
+            }
+            Events.openTradeModal();
+        },
+
+        openTradeModal: (tradeId = null) => {
+            DOM['trade-form'].reset();
+            DOM['trade-id'].value = tradeId || '';
+
+            if(tradeId) {
+                const trade = State.trades.find(t => t.id === tradeId);
+                DOM['modal-title'].textContent = `Edit Position: ${trade.ticker}`;
+                DOM.ticker.value = trade.ticker;
+                DOM.ticker.disabled = true;
+                DOM['initial-stop'].value = trade.initialStop;
+                DOM.sector.value = trade.sector || '';
+                DOM.tags.value = trade.tags ? trade.tags.join(', ') : '';
+                 ['entry-date', 'entry-price', 'quantity'].forEach(id => DOM[id].closest('div').style.display = 'none');
+            } else {
+                DOM['modal-title'].textContent = 'Add New Trade / Entry';
+                DOM.ticker.disabled = false;
+                ['entry-date', 'entry-price', 'quantity', 'initial-stop'].forEach(id => DOM[id].closest('div').style.display = 'block');
+            }
+            UI.openModal(DOM['trade-modal']);
+        },
+        
+        handleSaveTrade: (e) => {
+            e.preventDefault();
+            const tradeId = DOM['trade-id'].value;
+            const ticker = DOM.ticker.value.toUpperCase().trim();
+
+            if(tradeId) {
+                const trade = State.trades.find(t => t.id === tradeId);
+                if(trade){
+                    trade.sector = DOM.sector.value;
+                    trade.tags = DOM.tags.value.split(',').map(t => t.trim()).filter(Boolean);
+                    trade.initialStop = parseFloat(DOM['initial-stop'].value);
+                }
+            } else {
+                const entryData = {
+                    date: DOM['entry-date'].value,
+                    price: parseFloat(DOM['entry-price'].value),
+                    quantity: parseFloat(DOM.quantity.value),
+                    notes: DOM['trade-notes'].value,
+                };
+                
+                const cost = entryData.price * entryData.quantity;
+                if (State.settings.currentCash < cost) return Utils.showAlert('Not enough cash for this transaction.');
+
+                let existingTrade = State.trades.find(t => t.ticker === ticker && t.status === 'Open');
+                
+                if(existingTrade) {
+                    existingTrade.entries.push(entryData);
+                } else {
+                     State.trades.push({
+                        id: `trade-${Date.now()}`,
+                        ticker: ticker,
+                        status: 'Open',
+                        initialStop: parseFloat(DOM['initial-stop'].value),
+                        trailingStop: null,
+                        currentPrice: null,
+                        sector: DOM.sector.value,
+                        tags: DOM.tags.value.split(',').map(t => t.trim()).filter(Boolean),
+                        entries: [entryData],
+                        exits: [],
+                        stopHistory: [],
+                        psychology: {
+                            emotionalState: DOM['emotional-state'].value,
+                            notes: DOM['psychology-notes'].value
+                        }
+                    });
+                }
+                State.settings.currentCash -= cost;
+            }
+            
+            UI.closeModal(DOM['trade-modal']);
+            Calc.recordNavPoint();
+            UI.renderAll();
+        },
+
+        handleSaveExit: (e) => {
+            e.preventDefault();
+            const trade = State.trades.find(t => t.id === DOM['exit-select'].value);
+            if (!trade) return Utils.showAlert('Please select a position to exit.');
+            
+            const exitData = {
+                date: DOM['exit-date'].value,
+                price: parseFloat(DOM['exit-price'].value),
+                quantity: parseFloat(DOM['exit-quantity'].value),
+                notes: DOM['exit-remarks'].value
+            };
+            
+            const { currentPositionSize } = Calc.getTradeMetrics(trade);
+            if (exitData.quantity > currentPositionSize) {
+                return Utils.showAlert(`Cannot exit more than the current position size of ${currentPositionSize}.`);
+            }
+            if (exitData.quantity <= 0) {
+                 return Utils.showAlert(`Exit quantity must be a positive number.`);
+            }
+
+            trade.exits.push(exitData);
+            State.settings.currentCash += exitData.price * exitData.quantity;
+            
+            const newMetrics = Calc.getTradeMetrics(trade);
+            if(newMetrics.currentPositionSize <= 0) {
+                trade.status = 'Closed';
+            }
+            
+            Calc.recordNavPoint();
+            UI.closeModal(DOM['exit-modal']);
+            UI.renderAll();
+        },
+
+        handleSaveStop: (e) => {
+            e.preventDefault();
+            const trade = State.trades.find(t => t.id === DOM['stop-select'].value);
+            if(trade) {
+                if (!trade.stopHistory) trade.stopHistory = [];
+                trade.stopHistory.push({
+                    date: new Date().toISOString(),
+                    oldStop: trade.trailingStop || trade.initialStop,
+                    newStop: parseFloat(DOM['new-stop'].value),
+                    remarks: DOM['stop-remarks'].value
+                });
+                trade.trailingStop = parseFloat(DOM['new-stop'].value);
+                UI.closeModal(DOM['stop-modal']);
+                UI.renderAll();
+            }
+        },
+        
+        handleOpenSettings: () => {
+            DOM['set-capital'].value = State.settings.initialCapital;
+            DOM['set-cash'].value = State.settings.currentCash;
+            DOM['set-risk-percent'].value = State.settings.riskPerTradePercentage;
+            DOM['set-moderate-dd'].value = State.settings.moderateDrawdownThreshold;
+            DOM['set-high-risk-dd'].value = State.settings.highRiskDrawdownThreshold;
+            UI.openModal(DOM['settings-modal']);
+        },
+
+        handleSaveSettings: (e) => {
+            e.preventDefault();
+            State.settings.initialCapital = parseFloat(DOM['set-capital'].value);
+            State.settings.currentCash = parseFloat(DOM['set-cash'].value);
+            State.settings.riskPerTradePercentage = parseFloat(DOM['set-risk-percent'].value);
+            State.settings.moderateDrawdownThreshold = parseFloat(DOM['set-moderate-dd'].value);
+            State.settings.highRiskDrawdownThreshold = parseFloat(DOM['set-high-risk-dd'].value);
+            State.settings.highWaterMark = State.settings.initialCapital;
+            Calc.recordNavPoint();
+            UI.closeModal(DOM['settings-modal']);
+            UI.renderAll();
+        },
+
+        handleSaveProviderKeys: (e) => {
+            e.preventDefault();
+            State.settings.alphaVantageKey = DOM['alphavantage-key'].value.trim();
+            UI.closeModal(DOM['provider-modal']);
+            Utils.showAlert(`Data provider settings saved.`);
+        },
+
+        handleExport: () => {
+            const data = JSON.stringify({ settings: State.settings, trades: State.trades, navHistory: State.navHistory }, null, 2);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+            a.download = `trading_journal_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        },
+
+        handleImport: (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    App.loadData(data);
+                } catch (err) {
+                    Utils.showAlert(`Failed to parse JSON file: ${err.message}`);
+                }
+            };
+            reader.readAsText(file);
+        },
+
+        handleLoadOnlineData: async () => {
+            const url = 'https://elclel8888.github.io/TradingJ/trading_journal_backup.json';
+            UI.setLoading(DOM['btn-load-online'], true, 'Loading...');
+            try {
+                const response = await fetch(url, { cache: 'no-cache' }); 
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                App.loadData(data);
+            } catch (error) {
+                Utils.showAlert(`Failed to load online data: ${error.message}.`);
+            } finally {
+                UI.setLoading(DOM['btn-load-online'], false);
+            }
+        },
+        
+        handleGenSummary: async () => {
+            UI.openModal(DOM['summary-modal']);
+            DOM['summary-content'].innerHTML = '<div class="flex justify-center p-4"><div class="loader"></div></div>';
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const recentExits = State.trades.flatMap(t => t.exits.filter(exit => new Date(exit.date) >= oneWeekAgo));
+
+            if (!recentExits.length) {
+                DOM['summary-content'].innerHTML = "<p>No exits in the last 7 days to summarize.</p>";
+                return;
+            }
+            
+            const summaryStats = State.trades.map(Calc.getTradeMetrics);
+            const totalPL = summaryStats.reduce((sum, s) => sum + s.realizedPL, 0);
+            const totalR = summaryStats.reduce((sum, s) => sum + s.totalR, 0);
+
+            const dataString = `- Total Trades with Exits: ${recentExits.length}\n- Approx Realized P/L: ${Utils.formatCurrency(totalPL)}\n- Approx Total R: ${totalR.toFixed(2)}R`;
+            const systemPrompt = "You are a helpful financial analyst AI.";
+            const userPrompt = State.settings.promptCloudWeeklySummary.replace('{{DATA}}', dataString);
+            
+            const result = await API.callCloudLlm(systemPrompt, userPrompt);
+            DOM['summary-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
+        },
+
+        handleDescribeHoldings: async () => {
+            UI.openModal(DOM['holdings-modal']);
+            DOM['holdings-content'].innerHTML = '<div class="flex justify-center p-4"><div class="loader"></div></div>';
+            const openTrades = State.trades.filter(t => t.status === 'Open');
+            if (openTrades.length === 0) {
+                 DOM['holdings-content'].innerHTML = '<p>No open holdings to describe.</p>';
+                 return;
+            }
+
+            const dataString = openTrades.map(t => {
+                const m = Calc.getTradeMetrics(t);
+                const riskR = Calc.getCurrentRiskR(t);
+                return `- **${t.ticker}**: Holding ${m.currentPositionSize} shares with an average entry of ${Utils.formatCurrency(m.weightedAverageEntry)}. Current unrealized P/L is ${Utils.formatCurrency(m.unrealizedPL)} (${m.totalR.toFixed(2)}R). Initial stop at ${Utils.formatCurrency(t.initialStop)}, trailing stop at ${Utils.formatCurrency(t.trailingStop || t.initialStop)}. Current risk is ${riskR.toFixed(2)}R.`;
+            }).join('\n');
+
+            const systemPrompt = "You are a helpful financial writer AI.";
+            const userPrompt = State.settings.promptCloudDescribeHoldings.replace('{{DATA}}', dataString);
+            
+            const result = await API.callCloudLlm(systemPrompt, userPrompt);
+            DOM['holdings-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result.replace(/\n/g, '<br>');
+        },
+
+        handleAnalyzePortfolio: async () => {
+            UI.openModal(DOM['portfolio-modal']);
+            DOM['portfolio-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
+            const openTrades = State.trades.filter(t => t.status === 'Open');
+            if (!openTrades.length) {
+                DOM['portfolio-content'].innerHTML = "<p>No open trades to analyze.</p>";
+                return;
+            }
+
+            const totalUnrealizedPL = openTrades.reduce((sum, t) => sum + Calc.getTradeMetrics(t).unrealizedPL, 0);
+            const tradeDetails = openTrades.map(t => {
+                const m = Calc.getTradeMetrics(t);
+                return `- ${t.ticker}: P/L ${Utils.formatCurrency(m.unrealizedPL)} (${m.totalR.toFixed(2)}R). Position: ${m.currentPositionSize} shares. Sector: ${t.sector || 'N/A'}`;
+            }).join('\n');
+            const dataString = `- Positions: ${openTrades.length}\n- Total Unrealized P/L: ${Utils.formatCurrency(totalUnrealizedPL)}\n\n**Positions:**\n${tradeDetails}`;
+            
+            const systemPrompt = "You are a helpful financial analyst AI.";
+            const userPrompt = State.settings.promptCloudPortfolioAnalysis.replace('{{DATA}}', dataString);
+            
+            const result = await API.callCloudLlm(systemPrompt, userPrompt);
+            DOM['portfolio-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
+        },
+
+        handleAnalyzeTrade: async () => {
+            UI.openModal(DOM['ai-trade-modal']);
+            DOM['ai-trade-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
+            
+            const [ticker, entry, stop, notes] = [DOM.ticker.value, DOM['entry-price'].value, DOM['initial-stop'].value, DOM['psychology-notes'].value];
+            if (!ticker || !entry || !stop) {
+                DOM['ai-trade-content'].innerHTML = "<p>Ticker, Price, and Stop are required for analysis.</p>";
+                return;
+            }
+            
+            let userPrompt = State.settings.promptCloudTradeAnalysis.replace('{{TICKER}}', ticker).replace('{{ENTRY}}', entry).replace('{{STOP}}', stop).replace('{{NOTES}}', notes);
+            const result = await API.callCloudLlm("You are a helpful financial analyst AI.", userPrompt);
+            DOM['ai-trade-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result;
+        },
+
+        handleFindSector: async () => {
+            const ticker = DOM.ticker.value;
+            if (!ticker) return Utils.showAlert('Enter a ticker first.');
+            UI.setLoading(DOM['btn-find-sector'], true, '');
+            const userPrompt = State.settings.promptCloudFindSector.replace('{{TICKER}}', ticker);
+            const result = await API.callCloudLlm("You are a helpful financial analyst AI.", userPrompt);
+            if (result && !result.startsWith('Error:')) {
+                DOM.sector.value = result.trim().replace(/\.$/, '');
+            } else {
+                Utils.showAlert(`Could not find sector. AI analysis failed. Last error: ${result}`);
+            }
+            UI.setLoading(DOM['btn-find-sector'], false);
+        },
+
+        handleViewStopHistory: () => {
+            const select = DOM['stop-history-select'];
+            select.innerHTML = '<option value="">Select a trade...</option>';
+            State.trades.forEach(t => {
+                select.innerHTML += `<option value="${t.id}">${t.ticker} (${Utils.formatDate(t.entries[0]?.date)})</option>`;
+            });
+            DOM['stop-history-content'].innerHTML = '';
+
+            select.onchange = (e) => {
+                const trade = State.trades.find(t => t.id === e.target.value);
+                const content = DOM['stop-history-content'];
+                if (!trade || !trade.stopHistory || trade.stopHistory.length === 0) {
+                    content.innerHTML = '<p class="text-secondary text-center py-4">No stop history for this trade.</p>';
+                    return;
+                }
+                content.innerHTML = `<table class="min-w-full">
+                    <thead class="themed-bg"><tr>
+                        <th class="px-4 py-2 text-left">Date</th><th class="px-4 py-2 text-left">Old Stop</th><th class="px-4 py-2 text-left">New Stop</th><th class="px-4 py-2 text-left">Remarks</th>
+                    </tr></thead>
+                    <tbody>${trade.stopHistory.map(h => `
+                        <tr>
+                            <td class="px-4 py-2 border-t">${Utils.formatDate(h.date)} ${Utils.formatTime(h.date)}</td>
+                            <td class="px-4 py-2 border-t">${Utils.formatCurrency(h.oldStop)}</td>
+                            <td class="px-4 py-2 border-t">${Utils.formatCurrency(h.newStop)}</td>
+                            <td class="px-4 py-2 border-t">${h.remarks || 'N/A'}</td>
+                        </tr>`).join('')}
+                    </tbody></table>`;
+            };
+            UI.openModal(DOM['stop-history-modal']);
+        },
+        
+        handleViewAdvancedStats: () => {
+            const s = Calc.getAdvancedStats();
+            DOM['stats-content'].innerHTML = !s ? '<p>No closed trades to analyze.</p>' :
+                `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div class="themed-bg p-4 rounded-lg"><h3>Performance</h3><p>Total Trades: ${s.total}</p><p class="${s.expectancy > 0 ? 'text-green-600':'text-red-600'}">Expectancy: ${Utils.formatCurrency(s.expectancy)}</p></div>
+                    <div class="themed-bg p-4 rounded-lg"><h3>Win & Loss</h3><p>Wins: ${s.winners}</p><p>Losses: ${s.losers}</p></div>
+                    <div class="bg-green-100 p-4 rounded-lg text-green-800"><h3>Gains</h3><p>Avg Win: ${Utils.formatCurrency(s.avgWin)}</p><p>Largest Win: ${Utils.formatCurrency(s.largestWin)}</p></div>
+                    <div class="bg-red-100 p-4 rounded-lg text-red-800"><h3>Losses</h3><p>Avg Loss: ${Utils.formatCurrency(s.avgLoss)}</p><p>Largest Loss: ${Utils.formatCurrency(s.largestLoss)}</p></div>
+                    <div class="themed-bg p-4 rounded-lg md:col-span-2"><h3>Holding Time</h3><p>Avg Win Hold: ${Utils.formatDuration(s.avgWinHold)}</p><p>Avg Loss Hold: ${Utils.formatDuration(s.avgLossHold)}</p></div>
+                </div>`;
+            UI.openModal(DOM['stats-modal']);
+        },
+        
+        handleTradesTableClick: (e) => {
+            const row = e.target.closest('tr.trade-row');
+            const editButton = e.target.closest('[data-action="edit-trade"]');
+
+            if (editButton && row) {
+                e.stopPropagation();
+                Events.openTradeModal(row.dataset.id);
+                return;
+            }
+
+            if (row) {
+                const detailsRow = row.nextElementSibling;
+                if (detailsRow && detailsRow.classList.contains('trade-details-row')) {
+                    detailsRow.classList.toggle('is-visible');
+                    if(window.innerWidth < 1024) {
+                       detailsRow.style.display = detailsRow.classList.contains('is-visible') ? 'block' : 'none';
+                    }
+                }
+            }
+        },
+
+        handleCloudApiListClick: (e) => {
+            if (!State.settings.cloudApiConfigs) State.settings.cloudApiConfigs = [];
+            const action = e.target.dataset.action;
+            if (!action) return;
+            const row = e.target.closest('tr');
+            const id = row.dataset.id;
+            const config = State.settings.cloudApiConfigs.find(c => c.id === id);
+            if (action === 'edit' && config) {
+                DOM['cloud-api-id'].value = config.id;
+                DOM['cloud-api-name'].value = config.name;
+                DOM['cloud-api-key'].value = config.apiKey;
+                DOM['cloud-api-base-url'].value = config.baseUrl;
+                DOM['cloud-api-model'].value = config.model;
+            } else if (action === 'delete') {
+                Utils.showAlert(`Delete "${config.name}" API?`, 'confirm', (proceed) => {
+                    if (proceed) {
+                        State.settings.cloudApiConfigs = State.settings.cloudApiConfigs.filter(c => c.id !== id);
+                        UI.renderCloudApiConfigs();
+                    }
+                });
+            }
+        },
+
+        handleSaveCloudApiConfig: (e) => {
+            e.preventDefault();
+            const id = DOM['cloud-api-id'].value;
+            const configData = {
+                name: DOM['cloud-api-name'].value,
+                apiKey: DOM['cloud-api-key'].value,
+                baseUrl: DOM['cloud-api-base-url'].value,
+                model: DOM['cloud-api-model'].value
+            };
+            if (id) {
+                const index = State.settings.cloudApiConfigs.findIndex(c => c.id === id);
+                if (index > -1) State.settings.cloudApiConfigs[index] = { ...State.settings.cloudApiConfigs[index], ...configData };
+            } else {
+                if (!State.settings.cloudApiConfigs) State.settings.cloudApiConfigs = [];
+                State.settings.cloudApiConfigs.push({ id: `cloud-${Date.now()}`, ...configData });
+            }
+            UI.renderCloudApiConfigs();
+            DOM['cloud-api-form'].reset();
+            DOM['cloud-api-id'].value = '';
+        },
+        
+        handleOpenCloudPrompts: () => {
+            const defaults = getDefaultSettings();
+            DOM['prompt-cloud-weekly-summary'].value = State.settings.promptCloudWeeklySummary || defaults.promptCloudWeeklySummary;
+            DOM['prompt-cloud-describe-holdings'].value = State.settings.promptCloudDescribeHoldings || defaults.promptCloudDescribeHoldings;
+            DOM['prompt-cloud-portfolio-analysis'].value = State.settings.promptCloudPortfolioAnalysis || defaults.promptCloudPortfolioAnalysis;
+            DOM['prompt-cloud-trade-analysis'].value = State.settings.promptCloudTradeAnalysis || defaults.promptCloudTradeAnalysis;
+            DOM['prompt-cloud-find-sector'].value = State.settings.promptCloudFindSector || defaults.promptCloudFindSector;
+            
+            UI.openModal(DOM['cloud-prompt-modal']);
+        },
+        
+        handleSaveCloudPrompt: (e) => {
+            e.preventDefault();
+            State.settings.promptCloudWeeklySummary = DOM['prompt-cloud-weekly-summary'].value;
+            State.settings.promptCloudDescribeHoldings = DOM['prompt-cloud-describe-holdings'].value;
+            State.settings.promptCloudPortfolioAnalysis = DOM['prompt-cloud-portfolio-analysis'].value;
+            State.settings.promptCloudTradeAnalysis = DOM['prompt-cloud-trade-analysis'].value;
+            State.settings.promptCloudFindSector = DOM['prompt-cloud-find-sector'].value;
+            UI.closeModal(DOM['cloud-prompt-modal']);
+            Utils.showAlert('Cloud AI prompts saved.');
+        },
+        
+        handleCloudPromptTabClick: (e) => {
+            if(e.target.tagName !== 'BUTTON') return;
+            DOM['cloud-prompt-tabs'].querySelectorAll('button').forEach(btn => btn.classList.replace('tab-active', 'tab-inactive'));
+            e.target.classList.replace('tab-inactive', 'tab-active');
+            DOM['cloud-prompt-form'].querySelectorAll('[data-tab-panel]').forEach(panel => panel.classList.add('hidden'));
+            DOM['cloud-prompt-form'].querySelector(`[data-tab-panel="${e.target.dataset.tab}"]`).classList.remove('hidden');
+        },
+        
+        handleStopSelectChange: (e) => {
+            const tradeId = e.target.value;
+            const trade = State.trades.find(t => t.id === tradeId);
+            DOM['current-trailing-stop'].textContent = trade ? Utils.formatCurrency(trade.trailingStop || trade.initialStop) : 'N/A';
+        },
+        
+        handleExitSelectChange: (e) => {
+            const tradeId = e.target.value;
+            const trade = State.trades.find(t => t.id === tradeId);
+            if (trade) {
+                const { currentPositionSize } = Calc.getTradeMetrics(trade);
+                DOM['exit-current-position'].textContent = `${currentPositionSize} shares`;
+                DOM['exit-quantity'].value = currentPositionSize;
+            } else {
+                DOM['exit-current-position'].textContent = 'N/A';
+            }
+        },
+    };
+    // =================================================================================
+    // MODULE: App
+    // Main application controller.
+    // =================================================================================
+    const App = {
+        init: () => {
+            cacheDom();
+            Events.init();
+            
+            Chart.defaults.color = '#878A8C';
+            Chart.defaults.borderColor = '#CCCCCC';
+
+            if (State.navHistory.length === 0 && State.settings.initialCapital) {
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
-                state.navHistory.push({ 
+                State.navHistory.push({ 
                     date: d.toISOString().split('T')[0], 
-                    nav: state.settings.initialCapital,
+                    nav: State.settings.initialCapital,
                     timestamp: d.toISOString() 
                 });
             }
-            ui.render();
-        };
+            UI.renderAll();
+        },
+        loadData: (data) => {
+            const defaultSettings = getDefaultSettings();
 
-        return { init };
-    })();
+            if (data.settings) {
+                State.settings = { ...defaultSettings, ...data.settings };
+            } else {
+                State.settings = { ...defaultSettings };
+            }
+
+            if (data.trades) {
+                State.trades = data.trades.map(t => ({
+                    ...t,
+                    entries: t.entries || [{ date: t.entryDate, price: t.entryPrice, quantity: t.position, notes: t.psychologyNotes || '' }],
+                    exits: t.exits || (t.status === 'Closed' ? [{date: t.exitDate, price: t.exitPrice, quantity: t.position, notes: t.exitRemarks || ''}] : []),
+                    psychology: t.psychology || { emotionalState: t.emotionalState, notes: t.psychologyNotes },
+                    stopHistory: t.stopHistory || [],
+                }));
+            } else {
+                 State.trades = [];
+            }
+
+            if (data.navHistory) {
+                 State.navHistory = data.navHistory.map(item => ({ ...item, timestamp: item.timestamp || new Date(item.date).toISOString() }));
+            } else {
+                 State.navHistory = [];
+            }
+            
+            if (State.navHistory.length === 0 && State.settings.initialCapital) {
+                 const d = new Date();
+                 d.setDate(d.getDate() - 1);
+                 State.navHistory.push({ 
+                     date: d.toISOString().split('T')[0], 
+                     nav: State.settings.initialCapital,
+                     timestamp: d.toISOString() 
+                 });
+            }
+            
+            UI.renderAll();
+            Utils.showAlert('Data loaded successfully!');
+        }
+    };
 
     App.init();
 });
