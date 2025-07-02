@@ -1472,7 +1472,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataString = openTrades.map(t => {
                 const m = Calc.getTradeMetrics(t);
                 const riskR = Calc.getCurrentRiskR(t);
-                return `- **${t.ticker}**: Holding ${m.currentPositionSize} shares with an average entry of ${Utils.formatCurrency(m.weightedAverageEntry)}. Current unrealized P/L is ${Utils.formatCurrency(m.unrealizedPL)} (${m.totalR.toFixed(2)}R). Initial stop at ${Utils.formatCurrency(t.initialStop)}, trailing stop at ${Utils.formatCurrency(t.trailingStop || t.initialStop)}. Current risk is ${riskR.toFixed(2)}R.`;
+                const entryDetails = t.entries.map(e => `Entry on ${Utils.formatDate(e.date)}: ${e.quantity} shares at ${Utils.formatCurrency(e.price)}`).join(', ');
+                const psychology = t.psychology ? `Emotional State: ${t.psychology.emotionalState}, Notes: ${t.psychology.notes}`: 'N/A';
+
+                return `- **Ticker: ${t.ticker}** (ID: ${t.id})
+  - **Status**: ${t.status}
+  - **Position**:
+    - Current Size: ${m.currentPositionSize} shares
+    - Average Entry Price: ${Utils.formatCurrency(m.weightedAverageEntry)}
+    - Current Price: ${t.currentPrice ? Utils.formatCurrency(t.currentPrice) : 'N/A'}
+  - **Performance**:
+    - Unrealized P/L: ${Utils.formatCurrency(m.unrealizedPL)}
+    - Realized P/L: ${Utils.formatCurrency(m.realizedPL)}
+    - Total P/L (R): ${m.totalR.toFixed(2)}R
+  - **Risk Management**:
+    - Initial Stop: ${Utils.formatCurrency(t.initialStop)}
+    - Trailing Stop: ${t.trailingStop ? Utils.formatCurrency(t.trailingStop) : 'N/A'}
+    - Current Risk (R): ${riskR.toFixed(2)}R
+  - **Details**:
+    - Sector: ${t.sector || 'N/A'}
+    - Tags: ${t.tags ? t.tags.join(', ') : 'N/A'}
+    - Entry Transactions: ${entryDetails}
+  - **Psychology**: ${psychology}
+`;
             }).join('\n');
 
             const systemPrompt = "You are a helpful financial writer AI.";
@@ -1481,7 +1503,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await API.callCloudLlm(systemPrompt, userPrompt);
             DOM['holdings-content'].innerHTML = result.startsWith('Error:') ? `<p class="text-red-500">${result}</p>` : result.replace(/\n/g, '<br>');
         },
-
         handleAnalyzePortfolio: async () => {
             UI.openModal(DOM['portfolio-modal']);
             DOM['portfolio-content'].innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
