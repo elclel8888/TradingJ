@@ -1472,14 +1472,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataString = openTrades.map(t => {
                 const m = Calc.getTradeMetrics(t);
                 const riskR = Calc.getCurrentRiskR(t);
-                const entryDetails = t.entries.map(e => `Entry on ${Utils.formatDate(e.date)}: ${e.quantity} shares at ${Utils.formatCurrency(e.price)}`).join(', ');
+                const entryDetails = t.entries.map(e => `Entry on ${Utils.formatDate(e.date)}: ${e.quantity} shares at ${Utils.formatCurrency(e.price)} with notes: '${e.notes || 'N/A'}'`).join('; ');
+                const exitDetails = t.exits.map(e => `Exit on ${Utils.formatDate(e.date)}: ${e.quantity} shares at ${Utils.formatCurrency(e.price)} with notes: '${e.notes || 'N/A'}'`).join('; ');
+                const stopHistoryDetails = t.stopHistory.map(h => `Stop moved to ${Utils.formatCurrency(h.newStop)} on ${Utils.formatDate(h.date)} (${h.remarks || 'N/A'})`).join('; ');
                 const psychology = t.psychology ? `Emotional State: ${t.psychology.emotionalState}, Notes: ${t.psychology.notes}`: 'N/A';
 
-                return `- **Ticker: ${t.ticker}** (ID: ${t.id})
+                return `- **Ticker: ${t.ticker}** (Trade ID: ${t.id})
   - **Status**: ${t.status}
-  - **Position**:
-    - Current Size: ${m.currentPositionSize} shares
-    - Average Entry Price: ${Utils.formatCurrency(m.weightedAverageEntry)}
+  - **Position & Pricing**:
+    - Current Position Size: ${m.currentPositionSize} shares
+    - Weighted Average Entry: ${Utils.formatCurrency(m.weightedAverageEntry)}
     - Current Price: ${t.currentPrice ? Utils.formatCurrency(t.currentPrice) : 'N/A'}
   - **Performance**:
     - Unrealized P/L: ${Utils.formatCurrency(m.unrealizedPL)}
@@ -1489,10 +1491,12 @@ document.addEventListener('DOMContentLoaded', () => {
     - Initial Stop: ${Utils.formatCurrency(t.initialStop)}
     - Trailing Stop: ${t.trailingStop ? Utils.formatCurrency(t.trailingStop) : 'N/A'}
     - Current Risk (R): ${riskR.toFixed(2)}R
-  - **Details**:
+  - **Trade Details & History**:
     - Sector: ${t.sector || 'N/A'}
     - Tags: ${t.tags ? t.tags.join(', ') : 'N/A'}
-    - Entry Transactions: ${entryDetails}
+    - Entry History: ${entryDetails || 'No entries'}
+    - Exit History: ${exitDetails || 'No exits'}
+    - Stop History: ${stopHistoryDetails || 'No stop changes'}
   - **Psychology**: ${psychology}
 `;
             }).join('\n');
