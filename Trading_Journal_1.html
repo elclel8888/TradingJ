@@ -34,7 +34,11 @@
              border: 1px solid var(--border-color);
         }
         .modal-overlay { transition: opacity 0.3s ease-in-out; }
-        .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; overscroll-behavior: contain; }
+        .modal-content { 
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, background-color 0.3s; 
+            overscroll-behavior: contain;
+            position: relative; /* For positioning the close button */
+        }
         .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
         .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-primary); }
         .btn { transition: all 0.2s ease-in-out; }
@@ -260,6 +264,9 @@
 
     <div id="trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 id="modal-title" class="text-2xl font-bold mb-6">Add New Trade</h2>
             <form id="trade-form">
                 <input type="hidden" id="trade-id">
@@ -305,6 +312,9 @@
     
     <div id="exit-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Exit Position</h2>
             <form id="exit-form">
                  <div class="space-y-4">
@@ -322,6 +332,9 @@
     
      <div id="stop-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Update Trailing Stop</h2>
             <form id="stop-form">
                  <div class="space-y-4">
@@ -340,6 +353,9 @@
 
     <div id="settings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-md">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Account & Risk Settings</h2>
             <form id="settings-form">
                  <div class="space-y-4">
@@ -359,6 +375,9 @@
 
     <div id="provider-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Data Provider Settings</h2>
             <form id="provider-form">
                  <div><label for="alphavantage-key" class="block text-sm font-medium text-secondary">Alpha Vantage API Key</label><input type="password" id="alphavantage-key" class="mt-1 block w-full input"></div>
@@ -369,6 +388,9 @@
     
     <div id="cloud-api-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Cloud API Settings</h2>
             
             <form id="cloud-api-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6 p-4 border rounded-lg" style="border-color: var(--border-color);">
@@ -402,6 +424,9 @@
 
      <div id="cloud-prompt-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Cloud AI Prompt Settings</h2>
              <div id="cloud-prompt-tabs" class="flex border-b" style="border-color: var(--border-color);">
                 <button data-tab="weekly-summary" class="tab-button tab-active px-4 py-2 text-sm font-medium focus:outline-none rounded-t-lg">Weekly Summary</button>
@@ -442,6 +467,9 @@
 
     <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-4">✨ Weekly Performance Summary</h2>
             <div id="summary-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
@@ -453,6 +481,9 @@
     
     <div id="stats-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-4">Advanced Statistics</h2>
             <div id="stats-content" class="prose max-w-none space-y-4"></div>
             <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
@@ -461,6 +492,9 @@
 
     <div id="portfolio-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-4">📈 Current Portfolio Analysis</h2>
             <div id="portfolio-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end items-center">
@@ -472,6 +506,9 @@
     
     <div id="holdings-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-4">📄 Trade History Description</h2>
             <div id="holdings-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-between items-center">
@@ -483,6 +520,9 @@
 
     <div id="ai-trade-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-4">✨ AI Trade Analysis</h2>
             <div id="ai-trade-content" class="prose max-w-none space-y-4 min-h-[100px]"></div>
             <div class="mt-6 flex justify-end space-x-3">
@@ -494,6 +534,9 @@
 
     <div id="sector-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-xl font-bold mb-4">Sector Identified</h2>
             <div id="sector-content" class="text-lg font-semibold text-center"></div>
             <div class="mt-6 flex justify-end"><button type="button" class="btn-cancel py-2 px-4 rounded-md">Close</button></div>
@@ -502,6 +545,9 @@
     
      <div id="stop-history-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden opacity-0">
         <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <button type="button" class="btn-cancel absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
             <h2 class="text-2xl font-bold mb-6">Trailing Stop History</h2>
             <div class="space-y-4">
                 <div><label for="stop-history-select" class="block text-sm font-medium text-secondary">Select Trade</label>
@@ -769,7 +815,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? (trade.currentPrice - weightedAverageEntry) * currentPositionSize 
                 : 0;
 
-            // --- FIX: Round final P/L values to 2 decimal places ---
             realizedPL = parseFloat(realizedPL.toFixed(2));
             unrealizedPL = parseFloat(unrealizedPL.toFixed(2));
 
@@ -802,7 +847,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return sum + ((t.currentPrice || weightedAverageEntry) * currentPositionSize);
             }, 0);
             
-            // --- FIX: Round NAV to 2 decimal places ---
             const nav = parseFloat((State.settings.currentCash + openValue).toFixed(2));
 
             State.settings.highWaterMark = Math.max(State.settings.highWaterMark || nav, nav);
@@ -1283,10 +1327,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     trade.initialStop = parseFloat(DOM['initial-stop'].value);
                 }
             } else { // ADD mode
+                const entryPrice = parseFloat(DOM['entry-price'].value);
+                const quantity = parseFloat(DOM.quantity.value);
+                const initialStop = parseFloat(DOM['initial-stop'].value);
+
+                if (isNaN(entryPrice) || isNaN(quantity) || isNaN(initialStop) || entryPrice <= 0 || quantity <= 0 || initialStop <= 0) {
+                    return Utils.showAlert('Price, Quantity, and Initial Stop must be positive numbers.');
+                }
+                if (initialStop >= entryPrice) {
+                    return Utils.showAlert('Initial Stop must be below the Entry Price for a long position.');
+                }
+
                 const entryData = {
                     date: DOM['entry-date'].value,
-                    price: parseFloat(DOM['entry-price'].value),
-                    quantity: parseFloat(DOM.quantity.value),
+                    price: entryPrice,
+                    quantity: quantity,
                     notes: DOM['trade-notes'].value,
                 };
                 
@@ -1298,14 +1353,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (existingTrade) {
                     existingTrade.entries.push(entryData);
                     
-                    // --- FIX: Append new psychology notes and update state ---
                     const newPsychologyNotes = DOM['psychology-notes'].value;
                     if (newPsychologyNotes) {
                         existingTrade.psychology.notes += `\n\n--- Entry on ${entryData.date} ---\n${newPsychologyNotes}`;
                     }
-                    existingTrade.psychology.emotionalState = DOM['emotional-state'].value; // Update to latest emotional state
+                    existingTrade.psychology.emotionalState = DOM['emotional-state'].value;
 
-                    // --- FIX: Allow initial stop to be updated ---
                     const newInitialStop = parseFloat(DOM['initial-stop'].value);
                     if (!isNaN(newInitialStop) && newInitialStop > 0) {
                         existingTrade.initialStop = newInitialStop;
@@ -1316,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: `trade-${Date.now()}`,
                         ticker: ticker,
                         status: 'Open',
-                        initialStop: parseFloat(DOM['initial-stop'].value),
+                        initialStop: initialStop,
                         trailingStop: null,
                         currentPrice: null,
                         sector: DOM.sector.value,
@@ -1331,7 +1384,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
                 State.settings.currentCash -= cost;
-                // --- FIX: Round cash balance to prevent floating-point drift ---
                 State.settings.currentCash = parseFloat(State.settings.currentCash.toFixed(2));
             }
             
@@ -1345,33 +1397,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const trade = State.trades.find(t => t.id === DOM['exit-select'].value);
             if (!trade) return Utils.showAlert('Please select a position to exit.');
             
+            const exitPrice = parseFloat(DOM['exit-price'].value);
+            const exitQuantity = parseFloat(DOM['exit-quantity'].value);
+            const exitDate = DOM['exit-date'].value;
+            const firstEntryDate = trade.entries[0]?.date;
+
+            if (isNaN(exitPrice) || isNaN(exitQuantity) || exitPrice <= 0 || exitQuantity <= 0) {
+                return Utils.showAlert('Exit Price and Quantity must be positive numbers.');
+            }
+            if (firstEntryDate && exitDate < firstEntryDate) {
+                return Utils.showAlert(`Exit Date (${Utils.formatDate(exitDate)}) cannot be before the first entry date (${Utils.formatDate(firstEntryDate)}).`);
+            }
+            
             const exitData = {
-                date: DOM['exit-date'].value,
-                price: parseFloat(DOM['exit-price'].value),
-                quantity: parseFloat(DOM['exit-quantity'].value),
+                date: exitDate,
+                price: exitPrice,
+                quantity: exitQuantity,
                 notes: DOM['exit-remarks'].value
             };
             
-            if (isNaN(exitData.quantity) || exitData.quantity <= 0) {
-                return Utils.showAlert(`Exit quantity must be a positive number.`);
-            }
-
             const { currentPositionSize } = Calc.getTradeMetrics(trade);
-            const epsilon = 1e-9; // A small value to handle floating-point inaccuracies
+            const epsilon = 1e-9;
 
             if (exitData.quantity > currentPositionSize + epsilon) {
                 return Utils.showAlert(`Cannot exit more than the current position size of ${currentPositionSize}. You tried to exit ${exitData.quantity}.`);
             }
 
-            // Cap the exit quantity at the actual position size to prevent minor errors
             const actualExitQuantity = Math.min(exitData.quantity, currentPositionSize);
 
             trade.exits.push({ ...exitData, quantity: actualExitQuantity });
             State.settings.currentCash += exitData.price * actualExitQuantity;
-            // --- FIX: Round cash balance to prevent floating-point drift ---
             State.settings.currentCash = parseFloat(State.settings.currentCash.toFixed(2));
             
-            // Check if the trade is closed
             const newPositionSize = currentPositionSize - actualExitQuantity;
             if(newPositionSize <= epsilon) {
                 trade.status = 'Closed';
@@ -1386,14 +1443,19 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const trade = State.trades.find(t => t.id === DOM['stop-select'].value);
             if(trade) {
+                const newStop = parseFloat(DOM['new-stop'].value);
+                if (isNaN(newStop) || newStop <= 0) {
+                    return Utils.showAlert('New Stop must be a positive number.');
+                }
+
                 if (!trade.stopHistory) trade.stopHistory = [];
                 trade.stopHistory.push({
                     date: new Date().toISOString(),
                     oldStop: trade.trailingStop || trade.initialStop,
-                    newStop: parseFloat(DOM['new-stop'].value),
+                    newStop: newStop,
                     remarks: DOM['stop-remarks'].value
                 });
-                trade.trailingStop = parseFloat(DOM['new-stop'].value);
+                trade.trailingStop = newStop;
                 UI.closeModal(DOM['stop-modal']);
                 UI.renderAll();
             }
