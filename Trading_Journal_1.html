@@ -763,11 +763,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalExitQty = trade.exits.reduce((sum, e) => sum + e.quantity, 0);
             const currentPositionSize = totalEntryQty - totalExitQty;
             
-            const realizedPL = trade.exits.reduce((sum, exit) => sum + (exit.price - weightedAverageEntry) * exit.quantity, 0);
+            let realizedPL = trade.exits.reduce((sum, exit) => sum + (exit.price - weightedAverageEntry) * exit.quantity, 0);
             
-            const unrealizedPL = (currentPositionSize > 0 && trade.currentPrice) 
+            let unrealizedPL = (currentPositionSize > 1e-9 && trade.currentPrice) // Use epsilon for check
                 ? (trade.currentPrice - weightedAverageEntry) * currentPositionSize 
                 : 0;
+
+            // --- FIX: Round final P/L values to 2 decimal places ---
+            realizedPL = parseFloat(realizedPL.toFixed(2));
+            unrealizedPL = parseFloat(unrealizedPL.toFixed(2));
 
             const { initialCapital, riskPerTradePercentage } = State.settings;
             const accountRValue = initialCapital * (riskPerTradePercentage / 100);
@@ -798,7 +802,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return sum + ((t.currentPrice || weightedAverageEntry) * currentPositionSize);
             }, 0);
             
-            const nav = State.settings.currentCash + openValue;
+            // --- FIX: Round NAV to 2 decimal places ---
+            const nav = parseFloat((State.settings.currentCash + openValue).toFixed(2));
+
             State.settings.highWaterMark = Math.max(State.settings.highWaterMark || nav, nav);
             const drawdownDollars = State.settings.highWaterMark - nav;
             const drawdownPercent = State.settings.highWaterMark > 0 ? (drawdownDollars / State.settings.highWaterMark) * 100 : 0;
@@ -1269,14 +1275,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const tradeId = DOM['trade-id'].value;
             const ticker = DOM.ticker.value.toUpperCase().trim();
 
-            if(tradeId) {
+            if (tradeId) { // EDIT mode
                 const trade = State.trades.find(t => t.id === tradeId);
-                if(trade){
+                if (trade) {
                     trade.sector = DOM.sector.value;
                     trade.tags = DOM.tags.value.split(',').map(t => t.trim()).filter(Boolean);
                     trade.initialStop = parseFloat(DOM['initial-stop'].value);
                 }
-            } else {
+            } else { // ADD mode
                 const entryData = {
                     date: DOM['entry-date'].value,
                     price: parseFloat(DOM['entry-price'].value),
@@ -1289,8 +1295,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let existingTrade = State.trades.find(t => t.ticker === ticker && t.status === 'Open');
                 
-                if(existingTrade) {
+                if (existingTrade) {
                     existingTrade.entries.push(entryData);
+                    
+                    // --- FIX: Append new psychology notes and update state ---
+                    const newPsychologyNotes = DOM['psychology-notes'].value;
+                    if (newPsychologyNotes) {
+                        existingTrade.psychology.notes += `\n\n--- Entry on ${entryData.date} ---\n${newPsychologyNotes}`;
+                    }
+                    existingTrade.psychology.emotionalState = DOM['emotional-state'].value; // Update to latest emotional state
+
+                    // --- FIX: Allow initial stop to be updated ---
+                    const newInitialStop = parseFloat(DOM['initial-stop'].value);
+                    if (!isNaN(newInitialStop) && newInitialStop > 0) {
+                        existingTrade.initialStop = newInitialStop;
+                    }
+
                 } else {
                      State.trades.push({
                         id: `trade-${Date.now()}`,
@@ -1311,6 +1331,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
                 State.settings.currentCash -= cost;
+                // --- FIX: Round cash balance to prevent floating-point drift ---
+                State.settings.currentCash = parseFloat(State.settings.currentCash.toFixed(2));
             }
             
             UI.closeModal(DOM['trade-modal']);
@@ -1330,19 +1352,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 notes: DOM['exit-remarks'].value
             };
             
-            const { currentPositionSize } = Calc.getTradeMetrics(trade);
-            if (exitData.quantity > currentPositionSize) {
-                return Utils.showAlert(`Cannot exit more than the current position size of ${currentPositionSize}.`);
-            }
-            if (exitData.quantity <= 0) {
-                 return Utils.showAlert(`Exit quantity must be a positive number.`);
+            if (isNaN(exitData.quantity) || exitData.quantity <= 0) {
+                return Utils.showAlert(`Exit quantity must be a positive number.`);
             }
 
-            trade.exits.push(exitData);
-            State.settings.currentCash += exitData.price * exitData.quantity;
+            const { currentPositionSize } = Calc.getTradeMetrics(trade);
+            const epsilon = 1e-9; // A small value to handle floating-point inaccuracies
+
+            if (exitData.quantity > currentPositionSize + epsilon) {
+                return Utils.showAlert(`Cannot exit more than the current position size of ${currentPositionSize}. You tried to exit ${exitData.quantity}.`);
+            }
+
+            // Cap the exit quantity at the actual position size to prevent minor errors
+            const actualExitQuantity = Math.min(exitData.quantity, currentPositionSize);
+
+            trade.exits.push({ ...exitData, quantity: actualExitQuantity });
+            State.settings.currentCash += exitData.price * actualExitQuantity;
+            // --- FIX: Round cash balance to prevent floating-point drift ---
+            State.settings.currentCash = parseFloat(State.settings.currentCash.toFixed(2));
             
-            const newMetrics = Calc.getTradeMetrics(trade);
-            if(newMetrics.currentPositionSize <= 0) {
+            // Check if the trade is closed
+            const newPositionSize = currentPositionSize - actualExitQuantity;
+            if(newPositionSize <= epsilon) {
                 trade.status = 'Closed';
             }
             
